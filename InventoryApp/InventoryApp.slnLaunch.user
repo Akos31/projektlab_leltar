@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "InventoryApp\\InventoryApp.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "InventoryApp.Client\\InventoryApp.Client.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

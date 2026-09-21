@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="InventoryApp.Client.ScanPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:InventoryApp.Client.Models"
+    Title="Eszközök">
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="10">
+
+        <Label Grid.Row="0" x:Name="StatusLabel" Text="Betöltés..." FontSize="14" TextColor="Gray" />
+
+        <CollectionView Grid.Row="1" x:Name="AssetsList">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:AssetSummary">
+                    <Border Padding="12" Margin="0,4" Stroke="LightGray" StrokeShape="RoundRectangle 10">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="15" />
+                            <Label Text="{Binding SourceId, StringFormat='Leltárszám: {0}'}" FontSize="12" TextColor="Gray" />
+                            <Label Text="{Binding Status}" FontSize="12" TextColor="DarkGreen" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

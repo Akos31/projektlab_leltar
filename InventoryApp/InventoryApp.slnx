@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="InventoryApp.Client/InventoryApp.Client.csproj" />
+  <Project Path="InventoryApp/InventoryApp.csproj" />
+</Solution>

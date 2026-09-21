@@ -1,0 +1,18 @@
+# Visual Studio
+.vs/
+**/.vs/
+
+# Build eredmények
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Adatbázis
+*.db
+*.db-shm
+*.db-wal
+
+# OS fájlok
+.DS_Store
+Thumbs.db

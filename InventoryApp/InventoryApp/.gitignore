@@ -1,0 +1,18 @@
+# Build results
+bin/
+obj/
+
+# Rider / VS
+.vs/
+.idea/
+*.user
+*.suo
+
+# SQLite database - do not commit real data
+*.db
+*.db-shm
+*.db-wal
+
+# OS files
+.DS_Store
+Thumbs.db
