@@ -16,6 +16,7 @@ namespace InventoryApp.Data
         public DbSet<InventoryPeriod> InventoryPeriods => Set<InventoryPeriod>();
         public DbSet<Scan> Scans => Set<Scan>();
         public DbSet<ResponsiblePerson> ResponsiblePersons => Set<ResponsiblePerson>();
+        public DbSet<User> Users => Set<User>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +36,10 @@ namespace InventoryApp.Data
 
             modelBuilder.Entity<InventoryZone>()
                 .HasIndex(z => z.Code)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
                 .IsUnique();
 
             // Keep decimal precision explicit for the financial fields

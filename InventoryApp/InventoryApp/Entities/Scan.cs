@@ -14,6 +14,8 @@ namespace InventoryApp.Entities
 
         public int RoomId { get; set; }
         public Room? Room { get; set; }
+        public int UserId { get; set; }
+        public User? User { get; set; }
 
         public int InventoryPeriodId { get; set; }
         public InventoryPeriod? InventoryPeriod { get; set; }
@@ -26,5 +28,6 @@ namespace InventoryApp.Entities
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         public int ScannedQuantity { get; set; }
+
     }
 }
