@@ -1,4 +1,5 @@
 using InventoryApp.Data;
+using InventoryApp.Entities;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -44,61 +45,63 @@ namespace InventoryApp.Controllers
 
             return Ok(assets);
         }
-
-        // GET /api/assets/{id}
+        // GET /api/assets/5
         // ID alapu kereses
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public IActionResult GetById(int id)
         {
-            var asset = _db.Assets
-                .Include(a => a.AssetType)
-                .Include(a => a.InventoryZone)
-                .Include(a => a.Codes)
-                .Include(a => a.Accessories)
-                .FirstOrDefault(a => a.Id == id);
+            var asset = LoadAssetQuery().FirstOrDefault(a => a.Id == id);
 
             if (asset is null) return NotFound();
-            return Ok(asset);
+            return Ok(ToDto(asset));
         }
 
-        // GET /api/assets/{inventoryNumber}
+        // GET /api/assets/inventory/3038981
         // Leltarszam alapu kereses
-        [HttpGet("{inventoryNumber}")]
+        [HttpGet("inventory/{inventoryNumber}")]
         public IActionResult GetByInventoryNumber(string inventoryNumber)
         {
-            var asset = _db.Assets
-                .Include(a => a.AssetType)
-                .Include(a => a.InventoryZone)
-                .Include(a => a.Codes)
-                .Include(a => a.Accessories)
+            var asset = LoadAssetQuery()
                 .FirstOrDefault(a => a.Codes.Any(c =>
                     c.CodeType == "InventoryNumber" && c.CodeValue == inventoryNumber));
 
             if (asset is null)
                 return NotFound($"No asset found with inventory number '{inventoryNumber}'.");
 
-            return Ok(new
-            {
-                asset.Id,
-                asset.SourceId,
-                asset.Name,
-                asset.ExpectedQuantity,
-                asset.Status,
-                Type = asset.AssetType?.Name,
-                Zone = asset.InventoryZone?.Code,
-                Codes = asset.Codes.Select(c => new { c.CodeType, c.CodeValue, c.IsPrimary }),
-                Accessories = asset.Accessories.Select(ac => new
-                {
-                    ac.Name,
-                    ac.Quantity,
-                    ac.SubNumber,
-                    ac.VerifiedDirectly
-                })
-            });
+            return Ok(ToDto(asset));
         }
-            // POST /api/assets/import
-            // Excel feltoltese
-            [HttpPost("import")]
+
+        // --- Segedmetodusok ---
+
+        private IQueryable<Asset> LoadAssetQuery() =>
+            _db.Assets
+                .AsNoTracking()
+                .Include(a => a.AssetType)
+                .Include(a => a.InventoryZone)
+                .Include(a => a.Codes)
+                .Include(a => a.Accessories);
+
+        private static object ToDto(Asset asset) => new
+        {
+            asset.Id,
+            asset.SourceId,
+            asset.Name,
+            asset.ExpectedQuantity,
+            asset.Status,
+            Type = asset.AssetType?.Name,
+            Zone = asset.InventoryZone?.Code,
+            Codes = asset.Codes.Select(c => new { c.CodeType, c.CodeValue, c.IsPrimary }),
+            Accessories = asset.Accessories.Select(ac => new
+            {
+                ac.Name,
+                ac.Quantity,
+                ac.SubNumber,
+                ac.VerifiedDirectly
+            })
+        };
+        // POST /api/assets/import
+        // Excel feltoltese
+        [HttpPost("import")]
 
         public async Task<IActionResult> Import(IFormFile file, [FromForm] string zoneName)
         {
