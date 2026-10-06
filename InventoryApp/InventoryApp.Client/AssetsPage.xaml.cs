@@ -95,7 +95,7 @@ public partial class AssetsPage : ContentPage
         {
             query = query.Where(a =>
                 a.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                a.SourceId.Contains(search, StringComparison.OrdinalIgnoreCase));
+                (a.InventoryNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
         }
 
         query = FilterBy(query, StatusPicker, a => a.StatusText);

@@ -38,6 +38,10 @@ namespace InventoryApp.Controllers
                     a.Status,
                     Type = a.AssetType!.Name,
                     Zone = a.InventoryZone!.Code,
+                    InventoryNumber = a.Codes
+                        .Where(c => c.IsPrimary)
+                        .Select(c => c.CodeValue)
+                        .FirstOrDefault(),
                     Codes = a.Codes.Select(c => new { c.CodeType, c.CodeValue, c.IsPrimary }),
                     AccessoryCount = a.Accessories.Count
                 })
@@ -90,6 +94,10 @@ namespace InventoryApp.Controllers
             asset.Status,
             Type = asset.AssetType?.Name,
             Zone = asset.InventoryZone?.Code,
+            InventoryNumber = asset.Codes
+                .Where(c => c.IsPrimary)
+                .Select(c => c.CodeValue)
+                .FirstOrDefault(),
             Codes = asset.Codes.Select(c => new { c.CodeType, c.CodeValue, c.IsPrimary }),
             Accessories = asset.Accessories.Select(ac => new
             {

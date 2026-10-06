@@ -154,7 +154,7 @@
 
                                 <!-- Leltárszám -->
                                 <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                                       Text="{Binding SourceId, StringFormat='Leltárszám: {0}'}"
+                                       Text="{Binding InventoryNumber, StringFormat='Leltárszám: {0}'}"
                                        Style="{StaticResource Muted}" />
 
                                 <!-- Címkék -->

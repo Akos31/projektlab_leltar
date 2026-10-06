@@ -7,6 +7,7 @@ public class AssetSummary
     public string Name { get; set; } = string.Empty;
     public int ExpectedQuantity { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string? InventoryNumber { get; set; }
     public string? Type { get; set; }
     public string? Zone { get; set; }
     public int AccessoryCount { get; set; }
@@ -21,8 +22,10 @@ public class AssetSummary
     public string StatusText => Status switch
     {
         "active" => "Aktív",
-        "inactive" => "Inaktív",
-        "missing" => "Hiányzik",
+        "decommissioned" => "Kivonva",
+        "lost" => "Elveszett",
+        "stolen" => "Ellopva",
+        "other" => "Egyéb",
         _ => Status
     };
 
