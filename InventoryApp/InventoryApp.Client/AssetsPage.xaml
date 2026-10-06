@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="InventoryApp.Client.AssetsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:InventoryApp.Client.Models"
+    Title="Eszközök"
+    BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#181818}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Frissítés" Clicked="OnRefreshClicked" />
+    </ContentPage.ToolbarItems>
+
+    <ContentPage.Resources>
+        <!-- Kártya (szűrőpanel és listaelem) -->
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark=#262626}" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light=#E5E7EB, Dark=#333333}" />
+            <Setter Property="StrokeThickness" Value="1" />
+        </Style>
+
+        <!-- Kis, halvány felirat -->
+        <Style x:Key="Caption" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+        </Style>
+
+        <Style x:Key="Muted" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+        </Style>
+
+        <!-- Címke (típus, zóna, tartozék) -->
+        <Style x:Key="Chip" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F3F4F6, Dark=#333333}" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="Padding" Value="8,3" />
+        </Style>
+
+        <Style x:Key="ChipText" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#374151, Dark=#D1D5DB}" />
+        </Style>
+
+        <!-- Állapot jelvény: alapból szürke, "active" esetén zöld -->
+        <Style x:Key="StatusPill" TargetType="Border" x:DataType="models:AssetSummary">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E5E7EB, Dark=#3F3F46}" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="Padding" Value="10,2" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="active">
+                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#DCFCE7, Dark=#14532D}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="StatusPillText" TargetType="Label" x:DataType="models:AssetSummary">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="active">
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light=#166534, Dark=#BBF7D0}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16,12" RowSpacing="12">
+
+        <!-- Szűrőpanel -->
+        <Border Grid.Row="0" Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="16">
+            <VerticalStackLayout Spacing="12">
+
+                <SearchBar x:Name="SearchEntry"
+                           Placeholder="Keresés név vagy leltárszám alapján"
+                           TextChanged="OnSearchTextChanged" />
+
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="ÁLLAPOT" Style="{StaticResource Caption}" />
+                        <Picker x:Name="StatusPicker" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="TÍPUS" Style="{StaticResource Caption}" />
+                        <Picker x:Name="TypePicker" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="2" Spacing="4">
+                        <Label Text="ZÓNA" Style="{StaticResource Caption}" />
+                        <Picker x:Name="ZonePicker" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+                </Grid>
+
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Találatok száma + szűrők törlése -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Padding="4,0">
+            <ActivityIndicator x:Name="LoadingIndicator"
+                               WidthRequest="18" HeightRequest="18"
+                               IsVisible="False" VerticalOptions="Center" />
+            <Label Grid.Column="1" x:Name="ResultLabel" Style="{StaticResource Muted}"
+                   FontSize="14" VerticalOptions="Center" />
+            <Button Grid.Column="2" x:Name="ResetButton"
+                    Text="✕  Szűrők törlése"
+                    IsVisible="False"
+                    Clicked="OnResetClicked"
+                    BackgroundColor="Transparent"
+                    BorderWidth="0"
+                    FontSize="13"
+                    Padding="8,4"
+                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+        </Grid>
+
+        <!-- Eszközlista -->
+        <RefreshView Grid.Row="2" x:Name="RefreshContainer" Refreshing="OnRefreshing">
+            <CollectionView x:Name="AssetsList" SizeChanged="OnListSizeChanged">
+
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical" Span="1"
+                                     HorizontalItemSpacing="10" VerticalItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="0,40" Spacing="4" HorizontalOptions="Center">
+                        <Label Text="Nincs találat" FontSize="16" FontFamily="OpenSansSemibold"
+                               HorizontalOptions="Center" />
+                        <Label Text="Próbálj más keresőszót vagy szűrőt."
+                               Style="{StaticResource Muted}" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:AssetSummary">
+                        <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="14,12">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto"
+                                  ColumnSpacing="12" RowSpacing="6">
+
+                                <!-- Név -->
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       FontSize="16" FontFamily="OpenSansSemibold"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="{AppThemeBinding Light=#111827, Dark=#F3F4F6}" />
+
+                                <!-- Állapot jelvény -->
+                                <Border Grid.Row="0" Grid.Column="1"
+                                        Style="{StaticResource StatusPill}"
+                                        StrokeShape="RoundRectangle 10"
+                                        VerticalOptions="Start">
+                                    <Label Text="{Binding StatusText}" Style="{StaticResource StatusPillText}" />
+                                </Border>
+
+                                <!-- Leltárszám -->
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding SourceId, StringFormat='Leltárszám: {0}'}"
+                                       Style="{StaticResource Muted}" />
+
+                                <!-- Címkék -->
+                                <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="6">
+                                    <Border Style="{StaticResource Chip}" StrokeShape="RoundRectangle 6">
+                                        <Label Text="{Binding DisplayType}" Style="{StaticResource ChipText}" />
+                                    </Border>
+                                    <Border Style="{StaticResource Chip}" StrokeShape="RoundRectangle 6">
+                                        <Label Text="{Binding ZoneText}" Style="{StaticResource ChipText}" />
+                                    </Border>
+                                    <Border Style="{StaticResource Chip}" StrokeShape="RoundRectangle 6"
+                                            IsVisible="{Binding HasAccessories}">
+                                        <Label Text="{Binding AccessoryText}" Style="{StaticResource ChipText}" />
+                                    </Border>
+                                </HorizontalStackLayout>
+
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+    </Grid>
+</ContentPage>

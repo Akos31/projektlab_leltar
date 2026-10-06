@@ -9,8 +9,7 @@ public partial class LoginPage : ContentPage
 
     private async void OnLoginClicked(object sender, EventArgs e)
     {
-        // Egyelőre nincs valódi hitelesítés (JWT) - ez csak átnavigál,
-        // hogy a kliens-szerver kapcsolatot bizonyítsuk a ScanPage-en.
+        // Egyelőre nincs valódi hitelesítés (JWT) - ez csak átnavigál.
         if (string.IsNullOrWhiteSpace(UsernameEntry.Text))
         {
             ErrorLabel.Text = "Add meg a felhasználóneved.";
@@ -18,6 +17,6 @@ public partial class LoginPage : ContentPage
             return;
         }
 
-        await Shell.Current.GoToAsync(nameof(ScanPage));
+        await Shell.Current.GoToAsync("//ScanPage");
     }
 }

@@ -10,4 +10,25 @@ public class AssetSummary
     public string? Type { get; set; }
     public string? Zone { get; set; }
     public int AccessoryCount { get; set; }
+
+    // --- Megjelenítéshez számolt mezők (a szerver nem küldi) ---
+
+    // "VONALKÓD LEOLVASÓ" -> "Vonalkód leolvasó"
+    public string DisplayType => string.IsNullOrWhiteSpace(Type)
+        ? "Nincs típus"
+        : char.ToUpperInvariant(Type[0]) + Type[1..].ToLowerInvariant();
+
+    public string StatusText => Status switch
+    {
+        "active" => "Aktív",
+        "inactive" => "Inaktív",
+        "missing" => "Hiányzik",
+        _ => Status
+    };
+
+    public string ZoneText => string.IsNullOrWhiteSpace(Zone) ? "Nincs zóna" : $"Zóna {Zone}";
+
+    public bool HasAccessories => AccessoryCount > 0;
+
+    public string AccessoryText => $"{AccessoryCount} tartozék";
 }

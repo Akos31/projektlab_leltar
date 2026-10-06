@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="InventoryApp.Client.ImportPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Importálás"
+    BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#181818}">
+
+    <ContentPage.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark=#262626}" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light=#E5E7EB, Dark=#333333}" />
+            <Setter Property="StrokeThickness" Value="1" />
+        </Style>
+
+        <Style x:Key="Caption" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+        </Style>
+
+        <Style x:Key="Muted" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+        </Style>
+
+        <Style x:Key="Heading" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#111827, Dark=#F3F4F6}" />
+        </Style>
+
+        <Style x:Key="StatTile" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F3F4F6, Dark=#333333}" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="Padding" Value="14,10" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,12" Spacing="12" MaximumWidthRequest="720">
+
+            <!-- Feltöltő kártya -->
+            <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="20">
+                <VerticalStackLayout Spacing="18">
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Excel importálás" FontSize="20" Style="{StaticResource Heading}" />
+                        <Label Style="{StaticResource Muted}"
+                               Text="Tölts fel egy leltár-exportot (.xlsx). A már meglévő eszközöket a rendszer kihagyja, így ugyanaz a fájl többször is feltölthető." />
+                    </VerticalStackLayout>
+
+                    <!-- Fájl kiválasztása -->
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="FÁJL" Style="{StaticResource Caption}" />
+                        <Border StrokeShape="RoundRectangle 10" Padding="16"
+                                StrokeThickness="1.5" StrokeDashArray="4,3"
+                                Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#4B5563}"
+                                BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#1F1F1F}">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                    <Label x:Name="FileNameLabel" Text="Nincs kiválasztott fájl"
+                                           FontSize="15" Style="{StaticResource Heading}"
+                                           LineBreakMode="MiddleTruncation" />
+                                    <Label x:Name="FileInfoLabel" Text="Csak .xlsx formátum"
+                                           Style="{StaticResource Muted}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" x:Name="PickButton"
+                                        Text="Tallózás..." Clicked="OnPickFileClicked"
+                                        VerticalOptions="Center" Padding="16,8"
+                                        BackgroundColor="Transparent" BorderWidth="1"
+                                        BorderColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                            </Grid>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <!-- Zóna neve -->
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="ZÓNA NEVE (OPCIONÁLIS)" Style="{StaticResource Caption}" />
+                        <Entry x:Name="ZoneNameEntry" Placeholder="pl. Informatika tanszék" />
+                        <Label FontSize="12" Style="{StaticResource Muted}"
+                               Text="Csak akkor használja a rendszer, ha az Excelben eddig ismeretlen zóna szerepel." />
+                    </VerticalStackLayout>
+
+                    <!-- Feltöltés -->
+                    <Button x:Name="UploadButton" Text="Feltöltés"
+                            IsEnabled="False" Clicked="OnUploadClicked"
+                            FontFamily="OpenSansSemibold" HeightRequest="44" />
+
+                    <HorizontalStackLayout x:Name="BusyPanel" IsVisible="False"
+                                           Spacing="8" HorizontalOptions="Center">
+                        <ActivityIndicator IsRunning="True" WidthRequest="18" HeightRequest="18" />
+                        <Label Text="Feltöltés folyamatban..." Style="{StaticResource Muted}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Eredmény -->
+            <Border x:Name="ResultCard" IsVisible="False"
+                    Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="✓  Sikeres importálás" FontSize="16" FontFamily="OpenSansSemibold"
+                           TextColor="{AppThemeBinding Light=#166534, Dark=#86EFAC}" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Border Grid.Column="0" Style="{StaticResource StatTile}" StrokeShape="RoundRectangle 10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label x:Name="ImportedLabel" Text="0" FontSize="26" Style="{StaticResource Heading}" />
+                                <Label Text="ÚJ ESZKÖZ" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource StatTile}" StrokeShape="RoundRectangle 10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label x:Name="SkippedLabel" Text="0" FontSize="26" Style="{StaticResource Heading}" />
+                                <Label Text="MÁR LÉTEZETT (KIHAGYVA)" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Label Style="{StaticResource Muted}"
+                           Text="Az új eszközök megjelenítéséhez az Eszközök fülön nyomd meg a Frissítés gombot." />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Hiba -->
+            <Border x:Name="ErrorCard" IsVisible="False"
+                    StrokeShape="RoundRectangle 12" Padding="16" StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light=#FEF2F2, Dark=#3B1515}"
+                    Stroke="{AppThemeBinding Light=#FCA5A5, Dark=#7F1D1D}">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Sikertelen művelet" FontFamily="OpenSansSemibold"
+                           TextColor="{AppThemeBinding Light=#B91C1C, Dark=#FCA5A5}" />
+                    <Label x:Name="ErrorLabel" FontSize="13"
+                           TextColor="{AppThemeBinding Light=#7F1D1D, Dark=#FECACA}" />
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
