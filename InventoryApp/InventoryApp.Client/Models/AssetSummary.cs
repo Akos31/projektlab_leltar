@@ -14,24 +14,30 @@ public class AssetSummary
 
     // --- Megjelenítéshez számolt mezők (a szerver nem küldi) ---
 
-    // "VONALKÓD LEOLVASÓ" -> "Vonalkód leolvasó"
-    public string DisplayType => string.IsNullOrWhiteSpace(Type)
-        ? "Nincs típus"
-        : char.ToUpperInvariant(Type[0]) + Type[1..].ToLowerInvariant();
+    public string DisplayType => ToDisplayType(Type);
 
-    public string StatusText => Status switch
-    {
-        "active" => "Aktív",
-        "decommissioned" => "Kivonva",
-        "lost" => "Elveszett",
-        "stolen" => "Ellopva",
-        "other" => "Egyéb",
-        _ => Status
-    };
+    public string StatusText => ToStatusText(Status);
 
     public string ZoneText => string.IsNullOrWhiteSpace(Zone) ? "Nincs zóna" : $"Zóna {Zone}";
 
     public bool HasAccessories => AccessoryCount > 0;
 
     public string AccessoryText => $"{AccessoryCount} tartozék";
+
+    // --- Segédfüggvények (a szűrőkhöz is kellenek) ---
+
+    // "VONALKÓD LEOLVASÓ" -> "Vonalkód leolvasó"
+    public static string ToDisplayType(string? type) => string.IsNullOrWhiteSpace(type)
+        ? "Nincs típus"
+        : char.ToUpperInvariant(type[0]) + type[1..].ToLowerInvariant();
+
+    public static string ToStatusText(string? status) => status switch
+    {
+        "active" => "Aktív",
+        "decommissioned" => "Kivonva",
+        "lost" => "Elveszett",
+        "stolen" => "Ellopva",
+        "other" => "Egyéb",
+        _ => status ?? string.Empty
+    };
 }

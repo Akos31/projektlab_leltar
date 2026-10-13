@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using InventoryApp.Client.Models;
 using InventoryApp.Client.Services;
 
@@ -5,19 +6,29 @@ namespace InventoryApp.Client;
 
 public partial class AssetsPage : ContentPage
 {
-    private const string All = "Összes";
+    private const int PageSize = 100;
     private const double MinCardWidth = 380; // ennél keskenyebb kártya nem lesz -> oszlopszám
 
+    private static readonly FilterOption AllOption = new(null, "Összes");
+
     private readonly ApiService _api;
-    private List<AssetSummary> _allAssets = new();
+    private readonly ObservableCollection<AssetSummary> _assets = new();
+
+    private int _totalCount;          // a szűrésnek megfelelő összes eszköz a szerveren
+    private bool _isLoading;
     private bool _loaded;
+    private bool _autoLoadBlocked;    // hiba után ne próbálkozzon görgetésre végtelenül
     private bool _suppressFilter;
     private CancellationTokenSource? _searchCts;
+    private CancellationTokenSource _pageCts = new();
+
+    private bool HasMore => _assets.Count < _totalCount;
 
     public AssetsPage(ApiService api)
     {
         InitializeComponent();
         _api = api;
+        AssetsList.ItemsSource = _assets;
     }
 
     protected override async void OnAppearing()
@@ -25,147 +36,215 @@ public partial class AssetsPage : ContentPage
         base.OnAppearing();
         // Csak először töltünk be automatikusan, így fülváltáskor megmaradnak a szűrők.
         if (!_loaded)
-            await LoadAssetsAsync();
+            await RefreshAllAsync();
     }
 
-    private async Task LoadAssetsAsync()
+    // Szűrőértékek újratöltése + lista elölről
+    private async Task RefreshAllAsync()
     {
-        SetBusy(true);
         try
         {
-            _allAssets = await _api.GetAssetsAsync();
-            _loaded = true;
+            var filters = await _api.GetAssetFiltersAsync();
 
             _suppressFilter = true;
-            FillPicker(StatusPicker, a => a.StatusText);
-            FillPicker(TypePicker, a => a.DisplayType);
-            FillPicker(ZonePicker, a => a.Zone);
-            _suppressFilter = false;
-
-            ApplyFilters();
+            FillPicker(StatusPicker, filters.Statuses.Select(s => new FilterOption(s, AssetSummary.ToStatusText(s))));
+            FillPicker(TypePicker, filters.Types.Select(t => new FilterOption(t, AssetSummary.ToDisplayType(t))));
+            FillPicker(ZonePicker, filters.Zones.Select(z => new FilterOption(z, z)));
+            _loaded = true;
         }
         catch (Exception ex)
         {
-            ResultLabel.Text = $"Nem sikerült betölteni az eszközöket: {ex.Message}";
+            ResultLabel.Text = $"Nem sikerült betölteni a szűrőket: {ex.Message}";
+            RefreshContainer.IsRefreshing = false;
+            return;
         }
         finally
         {
             _suppressFilter = false;
-            SetBusy(false);
-            RefreshContainer.IsRefreshing = false;
+        }
+
+        await LoadPageAsync(reset: true);
+    }
+
+    // reset = true  -> új szűrés, a lista elölről indul
+    // reset = false -> a következő 100 elem hozzáfűzése
+    private async Task LoadPageAsync(bool reset)
+    {
+        if (reset)
+        {
+            // Ha még fut egy korábbi szűrés lekérése, azt eldobjuk
+            _pageCts.Cancel();
+            _pageCts = new CancellationTokenSource();
+            _assets.Clear();
+            _totalCount = 0;
+            _autoLoadBlocked = false;
+        }
+        else if (_isLoading || !HasMore)
+        {
+            return;
+        }
+
+        var cts = _pageCts;
+        _isLoading = true;
+        UpdateLoadingUi(firstPage: reset);
+
+        try
+        {
+            var page = await _api.GetAssetsPageAsync(_assets.Count, PageSize, BuildQuery(), cts.Token);
+            if (cts.IsCancellationRequested)
+                return;
+
+            foreach (var asset in page.Items)
+                _assets.Add(asset);
+
+            _totalCount = page.TotalCount;
+            UpdateResultLabel();
+        }
+        catch (OperationCanceledException)
+        {
+            // Közben új szűrés indult - nem hiba.
+        }
+        catch (Exception ex)
+        {
+            if (!cts.IsCancellationRequested)
+            {
+                _autoLoadBlocked = true;
+                ResultLabel.Text = $"Nem sikerült betölteni az eszközöket: {ex.Message}";
+            }
+        }
+        finally
+        {
+            // Csak az aktuális (nem eldobott) lekérés állítja vissza az állapotot
+            if (cts == _pageCts)
+            {
+                _isLoading = false;
+                UpdateLoadingUi(firstPage: reset);
+                RefreshContainer.IsRefreshing = false;
+            }
         }
     }
 
-    private void SetBusy(bool busy)
+    private void UpdateLoadingUi(bool firstPage)
     {
-        LoadingIndicator.IsVisible = busy;
-        LoadingIndicator.IsRunning = busy;
-        if (busy)
+        var showTop = _isLoading && firstPage;
+        LoadingIndicator.IsVisible = showTop;
+        LoadingIndicator.IsRunning = showTop;
+
+        var showBottom = _isLoading && !firstPage;
+        LoadMoreIndicator.IsVisible = showBottom;
+        LoadMoreIndicator.IsRunning = showBottom;
+
+        LoadMoreButton.IsVisible = !_isLoading && HasMore;
+
+        if (showTop)
             ResultLabel.Text = "Betöltés...";
     }
 
-    // "Összes" + a letöltött adatokban szereplő egyedi értékek, ábécérendben.
-    // Frissítéskor megtartja a korábbi választást, ha az még létezik.
-    private void FillPicker(Picker picker, Func<AssetSummary, string?> selector)
+    private void UpdateResultLabel()
     {
-        var previous = picker.SelectedItem as string;
+        var hasFilter = HasActiveFilter();
 
-        var items = new List<string> { All };
-        items.AddRange(_allAssets
-            .Select(selector)
-            .Where(v => !string.IsNullOrWhiteSpace(v))
-            .Select(v => v!)
-            .Distinct()
-            .OrderBy(v => v));
-
-        picker.ItemsSource = items;
-        picker.SelectedItem = previous is not null && items.Contains(previous) ? previous : All;
-    }
-
-    private void ApplyFilters()
-    {
-        if (_suppressFilter)
-            return;
-
-        var search = SearchEntry.Text?.Trim() ?? string.Empty;
-
-        IEnumerable<AssetSummary> query = _allAssets;
-
-        if (search.Length > 0)
-        {
-            query = query.Where(a =>
-                a.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                (a.InventoryNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
-        }
-
-        query = FilterBy(query, StatusPicker, a => a.StatusText);
-        query = FilterBy(query, TypePicker, a => a.DisplayType);
-        query = FilterBy(query, ZonePicker, a => a.Zone);
-
-        // Egyben cseréljük a listát (gyorsabb, mint 1800 elemet egyesével hozzáadni).
-        var filtered = query.ToList();
-        AssetsList.ItemsSource = filtered;
-
-        var hasFilter = search.Length > 0
-                        || IsFiltered(StatusPicker)
-                        || IsFiltered(TypePicker)
-                        || IsFiltered(ZonePicker);
-
-        ResultLabel.Text = hasFilter
-            ? $"{filtered.Count} találat ({_allAssets.Count} eszközből)"
-            : $"{_allAssets.Count} eszköz";
+        if (_totalCount == 0)
+            ResultLabel.Text = hasFilter ? "Nincs találat" : "Nincs eszköz";
+        else if (hasFilter)
+            ResultLabel.Text = $"{_totalCount} találat ({_assets.Count} megjelenítve)";
+        else
+            ResultLabel.Text = $"{_totalCount} eszköz ({_assets.Count} megjelenítve)";
 
         ResetButton.IsVisible = hasFilter;
     }
 
-    private static bool IsFiltered(Picker picker) =>
-        picker.SelectedItem is string s && s != All;
-
-    private static IEnumerable<AssetSummary> FilterBy(
-        IEnumerable<AssetSummary> query, Picker picker, Func<AssetSummary, string?> selector)
+    // "Összes" + a szervertől kapott értékek. Frissítéskor megtartja a korábbi választást.
+    private static void FillPicker(Picker picker, IEnumerable<FilterOption> options)
     {
-        if (!IsFiltered(picker))
-            return query;
+        var previous = picker.SelectedItem as FilterOption;
 
-        var selected = (string)picker.SelectedItem;
-        return query.Where(a => selector(a) == selected);
+        var items = new List<FilterOption> { AllOption };
+        items.AddRange(options);
+
+        picker.ItemsSource = items;
+        picker.SelectedItem = previous is not null && items.Contains(previous) ? previous : AllOption;
     }
 
-    // Gépelés közben csak 250 ms szünet után szűrünk, hogy ne akadjon.
+    private AssetQuery BuildQuery() => new()
+    {
+        Search = SearchEntry.Text?.Trim(),
+        Status = SelectedValue(StatusPicker),
+        Type = SelectedValue(TypePicker),
+        Zone = SelectedValue(ZonePicker)
+    };
+
+    private static string? SelectedValue(Picker picker) =>
+        (picker.SelectedItem as FilterOption)?.Value;
+
+    private bool HasActiveFilter()
+    {
+        var q = BuildQuery();
+        return !string.IsNullOrWhiteSpace(q.Search) || q.Status is not null || q.Type is not null || q.Zone is not null;
+    }
+
+    // --- Eseménykezelők ---
+
+    // Görgetéskor, amikor 10 elem van hátra a lista végéig
+    private async void OnRemainingItemsThresholdReached(object? sender, EventArgs e)
+    {
+        if (_autoLoadBlocked)
+            return;
+
+        await LoadPageAsync(reset: false);
+    }
+
+    // Tartalék gomb a lista alján (és hiba utáni újrapróbálás)
+    private async void OnLoadMoreClicked(object sender, EventArgs e)
+    {
+        _autoLoadBlocked = false;
+        await LoadPageAsync(reset: false);
+    }
+
+    // Gépelés közben csak 300 ms szünet után kérdezzük le a szervert.
     private async void OnSearchTextChanged(object sender, TextChangedEventArgs e)
     {
+        if (_suppressFilter)
+            return;
+
         _searchCts?.Cancel();
         var cts = _searchCts = new CancellationTokenSource();
 
         try
         {
-            await Task.Delay(250, cts.Token);
+            await Task.Delay(300, cts.Token);
         }
         catch (TaskCanceledException)
         {
             return;
         }
 
-        ApplyFilters();
+        await LoadPageAsync(reset: true);
     }
 
-    private void OnFilterChanged(object sender, EventArgs e) => ApplyFilters();
+    private async void OnFilterChanged(object sender, EventArgs e)
+    {
+        if (_suppressFilter)
+            return;
 
-    private void OnResetClicked(object sender, EventArgs e)
+        await LoadPageAsync(reset: true);
+    }
+
+    private async void OnResetClicked(object sender, EventArgs e)
     {
         _suppressFilter = true;
         SearchEntry.Text = string.Empty;
-        StatusPicker.SelectedItem = All;
-        TypePicker.SelectedItem = All;
-        ZonePicker.SelectedItem = All;
+        StatusPicker.SelectedItem = AllOption;
+        TypePicker.SelectedItem = AllOption;
+        ZonePicker.SelectedItem = AllOption;
         _suppressFilter = false;
 
-        ApplyFilters();
+        await LoadPageAsync(reset: true);
     }
 
-    private async void OnRefreshing(object sender, EventArgs e) => await LoadAssetsAsync();
+    private async void OnRefreshing(object sender, EventArgs e) => await RefreshAllAsync();
 
-    private async void OnRefreshClicked(object sender, EventArgs e) => await LoadAssetsAsync();
+    private async void OnRefreshClicked(object sender, EventArgs e) => await RefreshAllAsync();
 
     // Széles ablakban több oszlopba rendezzük a kártyákat.
     private void OnListSizeChanged(object? sender, EventArgs e)

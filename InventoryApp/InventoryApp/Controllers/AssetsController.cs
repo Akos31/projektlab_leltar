@@ -21,16 +21,47 @@ namespace InventoryApp.Controllers
             _importService = importService;
         }
 
-        // GET /api/assets
-        // Minden kilistazasa
+        // GET /api/assets?skip=0&take=100&search=...&status=...&type=...&zone=...
+        // Lapozott, szûrt lista
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 100,
+            [FromQuery] string? search = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? type = null,
+            [FromQuery] string? zone = null)
         {
-            var assets = _db.Assets
-                .Include(a => a.AssetType)
-                .Include(a => a.InventoryZone)
-                .Include(a => a.Codes)
-                .Include(a => a.Accessories)
+            skip = Math.Max(0, skip);
+            take = Math.Clamp(take, 1, 200);
+
+            IQueryable<Asset> query = _db.Assets.AsNoTracking();
+
+            // Keresés: név, eszközazonosító vagy bármelyik kód (pl. leltárszám)
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var pattern = $"%{search.Trim()}%";
+                query = query.Where(a =>
+                    EF.Functions.Like(a.Name, pattern) ||
+                    EF.Functions.Like(a.SourceId, pattern) ||
+                    a.Codes.Any(c => EF.Functions.Like(c.CodeValue, pattern)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+                query = query.Where(a => a.Status == status);
+
+            if (!string.IsNullOrWhiteSpace(type))
+                query = query.Where(a => a.AssetType!.Name == type);
+
+            if (!string.IsNullOrWhiteSpace(zone))
+                query = query.Where(a => a.InventoryZone!.Code == zone);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(a => a.Id)          // stabil sorrend kell a lapozáshoz
+                .Skip(skip)
+                .Take(take)
                 .Select(a => new
                 {
                     a.Id,
@@ -44,12 +75,28 @@ namespace InventoryApp.Controllers
                         .Where(c => c.IsPrimary)
                         .Select(c => c.CodeValue)
                         .FirstOrDefault(),
-                    Codes = a.Codes.Select(c => new { c.CodeType, c.CodeValue, c.IsPrimary }),
                     AccessoryCount = a.Accessories.Count
                 })
-                .ToList();
+                .ToListAsync();
 
-            return Ok(assets);
+            return Ok(new { Items = items, TotalCount = totalCount });
+        }
+
+        // GET /api/assets/filters
+        // A legördülõ szûrõk lehetséges értékei
+        [HttpGet("filters")]
+        public async Task<IActionResult> GetFilters()
+        {
+            var statuses = await _db.Assets
+                .Select(a => a.Status).Distinct().OrderBy(s => s).ToListAsync();
+
+            var types = await _db.Assets
+                .Select(a => a.AssetType!.Name).Distinct().OrderBy(n => n).ToListAsync();
+
+            var zones = await _db.Assets
+                .Select(a => a.InventoryZone!.Code).Distinct().OrderBy(c => c).ToListAsync();
+
+            return Ok(new { Statuses = statuses, Types = types, Zones = zones });
         }
         // GET /api/assets/5
         // ID alapu kereses
