@@ -14,7 +14,10 @@ namespace InventoryApp.Entities
 
         public int RoomId { get; set; }
         public Room? Room { get; set; }
-        public int UserId { get; set; }
+
+        public bool IsOtherZone { get; set; }
+
+        public int? UserId { get; set; }
         public User? User { get; set; }
 
         public int InventoryPeriodId { get; set; }

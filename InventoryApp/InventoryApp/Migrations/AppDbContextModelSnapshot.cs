@@ -249,6 +249,9 @@ namespace InventoryApp.Migrations
                     b.Property<int>("InventoryZoneId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsOtherZone")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("RoomId")
                         .HasColumnType("INTEGER");
 
@@ -258,7 +261,7 @@ namespace InventoryApp.Migrations
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -410,9 +413,7 @@ namespace InventoryApp.Migrations
 
                     b.HasOne("InventoryApp.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Asset");
 

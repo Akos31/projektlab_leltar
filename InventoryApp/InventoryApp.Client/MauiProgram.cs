@@ -25,6 +25,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ApiService>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<ScanPage>();
+        builder.Services.AddTransient<ScansPage>();
         builder.Services.AddTransient<AssetsPage>();
         builder.Services.AddTransient<ImportPage>();
 

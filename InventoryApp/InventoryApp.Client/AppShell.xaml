@@ -17,6 +17,9 @@
             Title="Beolvasás"
             ContentTemplate="{DataTemplate local:ScanPage}"
             Route="ScanPage" />
+        <ShellContent Title="Beolvasások"
+              ContentTemplate="{DataTemplate local:ScansPage}"
+              Route="ScansPage" />
         <ShellContent
             Title="Eszközök"
             ContentTemplate="{DataTemplate local:AssetsPage}"
