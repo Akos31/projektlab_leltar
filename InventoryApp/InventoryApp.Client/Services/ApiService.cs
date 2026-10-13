@@ -41,10 +41,33 @@ public class ApiService
         _http.DefaultRequestHeaders.Authorization = null;
     }
 
-    public async Task<List<AssetSummary>> GetAssetsAsync()
+    // GET api/assets?skip=..&take=..&search=..&status=..&type=..&zone=..
+    public async Task<PagedResult<AssetSummary>> GetAssetsPageAsync(
+        int skip, int take, AssetQuery filter, CancellationToken cancellationToken = default)
     {
-        var result = await _http.GetFromJsonAsync<List<AssetSummary>>("api/assets");
-        return result ?? new List<AssetSummary>();
+        var parameters = new List<string> { $"skip={skip}", $"take={take}" };
+
+        void Add(string name, string? value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                parameters.Add($"{name}={Uri.EscapeDataString(value)}");
+        }
+
+        Add("search", filter.Search);
+        Add("status", filter.Status);
+        Add("type", filter.Type);
+        Add("zone", filter.Zone);
+
+        var url = "api/assets?" + string.Join("&", parameters);
+        var result = await _http.GetFromJsonAsync<PagedResult<AssetSummary>>(url, cancellationToken);
+        return result ?? new PagedResult<AssetSummary>();
+    }
+
+    // GET api/assets/filters
+    public async Task<AssetFilterOptions> GetAssetFiltersAsync()
+    {
+        var result = await _http.GetFromJsonAsync<AssetFilterOptions>("api/assets/filters");
+        return result ?? new AssetFilterOptions();
     }
 
     // POST api/assets/import  (multipart: "file" + "zoneName")

@@ -115,7 +115,10 @@
 
         <!-- Eszközlista -->
         <RefreshView Grid.Row="2" x:Name="RefreshContainer" Refreshing="OnRefreshing">
-            <CollectionView x:Name="AssetsList" SizeChanged="OnListSizeChanged">
+            <CollectionView x:Name="AssetsList"
+                            SizeChanged="OnListSizeChanged"
+                            RemainingItemsThreshold="10"
+                            RemainingItemsThresholdReached="OnRemainingItemsThresholdReached">
 
                 <CollectionView.ItemsLayout>
                     <GridItemsLayout Orientation="Vertical" Span="1"
@@ -129,8 +132,26 @@
                         <Label Text="Próbálj más keresőszót vagy szűrőt."
                                Style="{StaticResource Muted}" HorizontalOptions="Center" />
                     </VerticalStackLayout>
-                </CollectionView.EmptyView>
 
+                </CollectionView.EmptyView>
+                <CollectionView.Footer>
+                    <Grid Padding="0,12,0,24">
+                        <ActivityIndicator x:Name="LoadMoreIndicator"
+                                           IsVisible="False" IsRunning="False"
+                                           WidthRequest="24" HeightRequest="24"
+                                           HorizontalOptions="Center" />
+                        <Button x:Name="LoadMoreButton"
+                                Text="Továbbiak betöltése"
+                                IsVisible="False"
+                                Clicked="OnLoadMoreClicked"
+                                HorizontalOptions="Center"
+                                Padding="16,6"
+                                BackgroundColor="Transparent"
+                                BorderWidth="1"
+                                BorderColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                    </Grid>
+                </CollectionView.Footer>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:AssetSummary">
                         <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="14,12">
