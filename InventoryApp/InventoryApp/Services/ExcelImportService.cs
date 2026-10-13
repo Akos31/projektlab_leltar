@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using ClosedXML.Excel;
 using InventoryApp.Data;
 using InventoryApp.Entities;
@@ -13,10 +14,7 @@ namespace InventoryApp.Services
 
         // Known non-values that show up in the "Gyártási szám" column and are
         // not real serial numbers. Extend this list as you find more.
-        private static readonly HashSet<string> KnownNonSerialValues = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "-", "NINCS", "BÚTOR"
-        };
+        private static readonly CultureInfo SourceCulture = CultureInfo.GetCultureInfo("hu-HU");
 
         public ExcelImportService(AppDbContext db)
         {
@@ -72,7 +70,11 @@ namespace InventoryApp.Services
                 }
 
                 var mainRow = group.FirstOrDefault(r => Get(r, "Alszám") == "0" || Get(r, "Alszám") == "");
-                if (mainRow is null) continue;
+                if (mainRow is null)
+                {
+                    result.SkippedInvalid++;
+                    continue;
+                }
 
                 // --- Step 3: build the Asset ---
                 var asset = new Asset
@@ -173,24 +175,21 @@ namespace InventoryApp.Services
             return telephelyRaw;
         }
 
-        private static bool IsKnownNonSerial(string value) =>
-            string.IsNullOrWhiteSpace(value) || KnownNonSerialValues.Contains(value);
-
         private static int ParseInt(string text, int fallback)
         {
-            if (double.TryParse(text, out var d)) return (int)d;
+            if (double.TryParse(text, NumberStyles.Any, SourceCulture, out var d)) return (int)d;
             return fallback;
         }
 
         private static decimal? ParseDecimal(string text)
         {
-            if (decimal.TryParse(text, out var d)) return d;
+            if (decimal.TryParse(text, NumberStyles.Any, SourceCulture, out var d)) return d;
             return null;
         }
 
         private static DateTime? ParseDate(string text)
         {
-            if (DateTime.TryParse(text, out var d)) return d;
+            if (DateTime.TryParse(text, SourceCulture, DateTimeStyles.None, out var d)) return d;
             return null;
         }
     }
@@ -199,5 +198,6 @@ namespace InventoryApp.Services
     {
         public int Imported { get; set; }
         public int SkippedExisting { get; set; }
+        public int SkippedInvalid { get; set; }
     }
 }

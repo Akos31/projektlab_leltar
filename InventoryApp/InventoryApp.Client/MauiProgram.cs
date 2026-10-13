@@ -18,12 +18,15 @@ public static class MauiProgram
 
         builder.Services.AddSingleton(sp => new HttpClient
         {
-            BaseAddress = new Uri("https://localhost:7080/")
+            BaseAddress = new Uri(DeviceInfo.Platform == DevicePlatform.Android
+                ? "https://10.0.2.2:7080/" : "https://localhost:7080/")
         });
 
         builder.Services.AddSingleton<ApiService>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<ScanPage>();
+        builder.Services.AddTransient<AssetsPage>();
+        builder.Services.AddTransient<ImportPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
