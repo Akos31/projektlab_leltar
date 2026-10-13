@@ -5,6 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventoryApp.Controllers
 {
+    public class ZoneRequest
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+    }
     public class RoomRequest
     {
         public string RoomNumber { get; set; } = string.Empty;
@@ -19,15 +24,18 @@ namespace InventoryApp.Controllers
 
         // Körzetek + az esetleg nyitott időszak azonosítója
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] bool includeInactive = false)
         {
             var zones = await _db.InventoryZones
+                .Where(z => includeInactive || z.IsActive)
                 .OrderBy(z => z.Code)
                 .Select(z => new
                 {
                     z.Id,
                     z.Code,
                     z.Name,
+                    z.IsActive,
                     OpenPeriodId = z.InventoryPeriods
                         .Where(p => p.Status == "open")
                         .Select(p => (int?)p.Id)
@@ -41,9 +49,11 @@ namespace InventoryApp.Controllers
         [HttpPost("{id:int}/open-period")]
         public async Task<IActionResult> OpenPeriod(int id)
         {
-            if (!await _db.InventoryZones.AnyAsync(z => z.Id == id))
+            var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);
+            if (zone == null)
                 return NotFound(new { message = "Nincs ilyen körzet." });
-
+            if (!zone.IsActive)
+                return BadRequest(new { message = "Inaktív körzetben nem indítható leltári időszak." });
             var open = await _db.InventoryPeriods
                 .FirstOrDefaultAsync(p => p.InventoryZoneId == id && p.Status == "open");
             if (open != null)
@@ -105,6 +115,90 @@ namespace InventoryApp.Controllers
             _db.Rooms.Add(room);
             await _db.SaveChangesAsync();
             return Ok(new { room.Id, room.RoomNumber });
+        }
+
+        // Egy körzet leltári időszakai (legújabb elöl)
+        [HttpGet("{id:int}/periods")]
+        public async Task<IActionResult> GetPeriods(int id)
+        {
+            var list = await _db.InventoryPeriods
+                .Where(p => p.InventoryZoneId == id)
+                .OrderByDescending(p => p.StartDate)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.StartDate,
+                    p.EndDate,
+                    p.Status,
+                    ScanCount = p.Scans.Count
+                })
+                .ToListAsync();
+            return Ok(list);
+        }
+        // Új körzet
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] ZoneRequest req)
+        {
+            var code = req.Code?.Trim() ?? "";
+            var name = req.Name?.Trim() ?? "";
+            if (code.Length == 0)
+                return BadRequest(new { message = "A körzet kódja nem lehet üres." });
+            if (await _db.InventoryZones.AnyAsync(z => z.Code.ToLower() == code.ToLower()))
+                return Conflict(new { message = $"Már van '{code}' kódú körzet." });
+
+            var zone = new InventoryZone { Code = code, Name = name.Length == 0 ? code : name, IsActive = true };
+            _db.InventoryZones.Add(zone);
+            await _db.SaveChangesAsync();
+            return Ok(new { zone.Id, zone.Code, zone.Name, zone.IsActive });
+        }
+
+        // Szerkesztés
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] ZoneRequest req)
+        {
+            var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);
+            if (zone == null)
+                return NotFound(new { message = "Nincs ilyen körzet." });
+
+            var code = req.Code?.Trim() ?? "";
+            var name = req.Name?.Trim() ?? "";
+            if (code.Length == 0)
+                return BadRequest(new { message = "A körzet kódja nem lehet üres." });
+            if (await _db.InventoryZones.AnyAsync(z => z.Id != id && z.Code.ToLower() == code.ToLower()))
+                return Conflict(new { message = $"Már van '{code}' kódú körzet." });
+
+            zone.Code = code;
+            zone.Name = name.Length == 0 ? code : name;
+            await _db.SaveChangesAsync();
+            return Ok(new { zone.Id, zone.Code, zone.Name, zone.IsActive });
+        }
+
+        // Inaktívvá tétel (csak nyitott időszak nélkül)
+        [HttpPost("{id:int}/deactivate")]
+        public async Task<IActionResult> Deactivate(int id)
+        {
+            var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);
+            if (zone == null)
+                return NotFound(new { message = "Nincs ilyen körzet." });
+
+            if (await _db.InventoryPeriods.AnyAsync(p => p.InventoryZoneId == id && p.Status == "open"))
+                return Conflict(new { message = "A körzetnek nyitott leltári időszaka van, előbb zárd le." });
+
+            zone.IsActive = false;
+            await _db.SaveChangesAsync();
+            return Ok(new { zone.Id, zone.IsActive });
+        }
+
+        [HttpPost("{id:int}/activate")]
+        public async Task<IActionResult> Activate(int id)
+        {
+            var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);
+            if (zone == null)
+                return NotFound(new { message = "Nincs ilyen körzet." });
+
+            zone.IsActive = true;
+            await _db.SaveChangesAsync();
+            return Ok(new { zone.Id, zone.IsActive });
         }
     }
 }

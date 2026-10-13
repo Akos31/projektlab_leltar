@@ -3,21 +3,26 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="InventoryApp.Client.ScansPage"
              Title="Beolvasások">
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
 
         <Picker x:Name="ZoneFilter" Grid.Row="0" Title="Körzet"
                 ItemDisplayBinding="{Binding Display}"
+                SelectedIndexChanged="OnZoneFilterChanged" />
+
+        <Picker x:Name="PeriodFilter" Grid.Row="1" Title="Leltári időszak"
+                IsEnabled="False"
+                ItemDisplayBinding="{Binding Display}"
                 SelectedIndexChanged="OnFilterChanged" />
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="8">
+        <HorizontalStackLayout Grid.Row="2" Spacing="8">
             <Switch x:Name="OtherOnly" Toggled="OnFilterChanged" />
             <Label Text="Csak másik körzetből" VerticalOptions="Center" />
             <Button Text="Frissítés" Clicked="OnRefresh" />
         </HorizontalStackLayout>
 
-        <Label x:Name="CountLabel" Grid.Row="2" TextColor="Gray" />
+        <Label x:Name="CountLabel" Grid.Row="3" TextColor="Gray" />
 
-        <CollectionView x:Name="ScanList" Grid.Row="3">
+        <CollectionView x:Name="ScanList" Grid.Row="4">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border Padding="10" Margin="0,0,0,6" StrokeThickness="1" Stroke="LightGray">

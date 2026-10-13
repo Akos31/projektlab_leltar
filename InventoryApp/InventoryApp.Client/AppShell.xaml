@@ -28,5 +28,8 @@
             Title="Importálás"
             ContentTemplate="{DataTemplate local:ImportPage}"
             Route="ImportPage" />
+        <ShellContent Title="Körzetek"
+              ContentTemplate="{DataTemplate local:ZonesPage}"
+              Route="ZonesPage" />
     </TabBar>
 </Shell>

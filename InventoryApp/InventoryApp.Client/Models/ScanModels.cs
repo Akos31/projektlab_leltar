@@ -5,8 +5,20 @@
         public int Id { get; set; }
         public string Code { get; set; } = "";
         public string Name { get; set; } = "";
+        public bool IsActive { get; set; } = true;
         public int? OpenPeriodId { get; set; }
-        public string Display => string.IsNullOrWhiteSpace(Name) ? Code : $"{Code} – {Name}";
+
+        // lista: kód – név
+        public string FullName => string.IsNullOrWhiteSpace(Name) || Name == Code ? Code : $"{Code} – {Name}";
+        // választók: inaktív jelzéssel
+        public string Display => IsActive ? FullName : $"{FullName} (inaktív)";
+        public string StatusText => IsActive ? "aktív" : "inaktív";
+        public string ToggleText => IsActive ? "Inaktívvá tesz" : "Aktívvá tesz";
+    }
+
+    public class ErrorResponse
+    {
+        public string? Message { get; set; }
     }
 
     public class RoomItem
@@ -53,5 +65,19 @@
         public string Title => $"{InventoryNumber} – {AssetName}";
         public string Detail =>
             $"{Zone} / {Room} · {ScannedQuantity} db · {Timestamp.ToLocalTime():yyyy.MM.dd HH:mm:ss}";
+    }
+    public class PeriodListItem
+    {
+        public int Id { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string Status { get; set; } = "";
+        public int ScanCount { get; set; }
+
+        public string Display =>
+            Id == 0 ? "Összes időszak"
+            : $"#{Id} · {StartDate.ToLocalTime():yyyy.MM.dd HH:mm} – " +
+              $"{(EndDate == null ? "nyitott" : EndDate.Value.ToLocalTime().ToString("yyyy.MM.dd HH:mm"))}" +
+              $" ({ScanCount} db)";
     }
 }

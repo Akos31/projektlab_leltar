@@ -28,6 +28,7 @@ public static class MauiProgram
         builder.Services.AddTransient<ScansPage>();
         builder.Services.AddTransient<AssetsPage>();
         builder.Services.AddTransient<ImportPage>();
+        builder.Services.AddTransient<ZonesPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
