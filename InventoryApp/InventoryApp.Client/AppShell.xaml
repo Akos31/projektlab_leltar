@@ -12,4 +12,26 @@
         ContentTemplate="{DataTemplate local:LoginPage}"
         Route="LoginPage" />
 
+    <TabBar Route="main">
+        <ShellContent
+            x:Name="ScanTab"
+            Title="Beolvasás"
+            ContentTemplate="{DataTemplate local:ScanPage}"
+            Route="ScanPage" />
+        <ShellContent
+            x:Name="AssetsTab"
+            Title="Eszközök"
+            ContentTemplate="{DataTemplate local:AssetsPage}"
+            Route="AssetsPage" />
+        <ShellContent
+            x:Name="ImportTab"
+            Title="Importálás"
+            ContentTemplate="{DataTemplate local:ImportPage}"
+            Route="ImportPage" />
+        <ShellContent
+            x:Name="ProfileTab"
+            Title="Fiók"
+            ContentTemplate="{DataTemplate local:ProfilePage}"
+            Route="ProfilePage" />
+    </TabBar>
 </Shell>
