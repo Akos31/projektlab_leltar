@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="InventoryApp.Client.ProfilePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Fiók"
+    BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#181818}">
+
+    <VerticalStackLayout Padding="16,12" Spacing="12" MaximumWidthRequest="720">
+
+        <Border StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="1"
+                BackgroundColor="{AppThemeBinding Light=White, Dark=#262626}"
+                Stroke="{AppThemeBinding Light=#E5E7EB, Dark=#333333}">
+            <VerticalStackLayout Spacing="14">
+
+                <VerticalStackLayout Spacing="2">
+                    <Label x:Name="DisplayNameLabel" FontSize="20" FontFamily="OpenSansSemibold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F3F4F6}" />
+                    <Label x:Name="UsernameLabel" FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                </VerticalStackLayout>
+
+                <Border StrokeThickness="0" StrokeShape="RoundRectangle 10" Padding="10,3"
+                        HorizontalOptions="Start"
+                        BackgroundColor="{AppThemeBinding Light=#EDE9FE, Dark=#3B2F63}">
+                    <Label x:Name="RoleLabel" FontSize="12" FontFamily="OpenSansSemibold"
+                           TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                </Border>
+
+                <Label x:Name="PermissionsLabel" FontSize="13"
+                       TextColor="{AppThemeBinding Light=#374151, Dark=#D1D5DB}" />
+
+                <Button Text="Kijelentkezés" Clicked="OnLogoutClicked"
+                        BackgroundColor="Transparent" BorderWidth="1"
+                        BorderColor="{AppThemeBinding Light=#DC2626, Dark=#F87171}"
+                        TextColor="{AppThemeBinding Light=#DC2626, Dark=#F87171}" />
+            </VerticalStackLayout>
+        </Border>
+
+    </VerticalStackLayout>
+</ContentPage>

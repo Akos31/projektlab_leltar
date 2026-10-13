@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using InventoryApp.Client.Models;
 
@@ -7,10 +8,37 @@ namespace InventoryApp.Client.Services;
 public class ApiService
 {
     private readonly HttpClient _http;
+    private readonly UserSession _session;
 
-    public ApiService(HttpClient http)
+    public ApiService(HttpClient http, UserSession session)
     {
         _http = http;
+        _session = session;
+    }
+
+    // POST api/auth/login
+    public async Task<LoginResponse> LoginAsync(string username, string password)
+    {
+        using var response = await _http.PostAsJsonAsync("api/auth/login", new { username, password });
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+            throw new InvalidOperationException("Hibás felhasználónév vagy jelszó.");
+
+        response.EnsureSuccessStatusCode();
+
+        var login = await response.Content.ReadFromJsonAsync<LoginResponse>()
+                    ?? throw new InvalidOperationException("Üres válasz érkezett a szervertől.");
+
+        _session.SignIn(login);
+        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.Token);
+
+        return login;
+    }
+
+    public void Logout()
+    {
+        _session.SignOut();
+        _http.DefaultRequestHeaders.Authorization = null;
     }
 
     public async Task<List<AssetSummary>> GetAssetsAsync()
@@ -32,6 +60,9 @@ public class ApiService
         content.Add(new StringContent(zoneName), "zoneName");
 
         using var response = await _http.PostAsync("api/assets/import", content);
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+            throw new HttpRequestException("Nincs jogosultságod az importáláshoz.");
 
         if (!response.IsSuccessStatusCode)
         {

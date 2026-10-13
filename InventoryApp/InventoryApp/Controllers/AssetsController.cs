@@ -3,11 +3,13 @@ using InventoryApp.Entities;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InventoryApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AssetsController : ControllerBase
     {
         private readonly AppDbContext _db;
@@ -108,8 +110,9 @@ namespace InventoryApp.Controllers
             })
         };
         // POST /api/assets/import
-        // Excel feltoltese
+        // Excel feltoltese - csak admin
         [HttpPost("import")]
+        [Authorize(Roles = Roles.Admin)]
 
         public async Task<IActionResult> Import(IFormFile file, [FromForm] string zoneName)
         {

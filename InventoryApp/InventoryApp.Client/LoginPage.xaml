@@ -9,11 +9,11 @@
 
         <Label Text="Leltár App" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
         <Label Text="Egyetemi eszköznyilvántartás" FontSize="13" HorizontalOptions="Center" TextColor="Gray" />
-
         <Entry x:Name="UsernameEntry" Placeholder="Felhasználónév" />
-        <Entry x:Name="PasswordEntry" Placeholder="Jelszó" IsPassword="True" />
+        <Entry x:Name="PasswordEntry" Placeholder="Jelszó" IsPassword="True"
+               Completed="OnLoginClicked" />
 
-        <Button Text="Bejelentkezés" Clicked="OnLoginClicked" />
+        <Button x:Name="LoginButton" Text="Bejelentkezés" Clicked="OnLoginClicked" />
 
         <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" HorizontalOptions="Center" />
 
