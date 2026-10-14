@@ -15,5 +15,6 @@ namespace InventoryApp.Entities
         public List<Asset> Assets { get; set; } = new();
         public List<Room> Rooms { get; set; } = new();
         public List<InventoryPeriod> InventoryPeriods { get; set; } = new();
+        public bool IsActive { get; set; } = true;
     }
 }

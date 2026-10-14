@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InventoryApp.Client.ScansPage"
+             Title="Beolvasások">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
+
+        <Picker x:Name="ZoneFilter" Grid.Row="0" Title="Körzet"
+                ItemDisplayBinding="{Binding Display}"
+                SelectedIndexChanged="OnZoneFilterChanged" />
+
+        <Picker x:Name="PeriodFilter" Grid.Row="1" Title="Leltári időszak"
+                IsEnabled="False"
+                ItemDisplayBinding="{Binding Display}"
+                SelectedIndexChanged="OnFilterChanged" />
+
+        <HorizontalStackLayout Grid.Row="2" Spacing="8">
+            <Switch x:Name="OtherOnly" Toggled="OnFilterChanged" />
+            <Label Text="Csak másik körzetből" VerticalOptions="Center" />
+            <Button Text="Frissítés" Clicked="OnRefresh" />
+        </HorizontalStackLayout>
+
+        <Label x:Name="CountLabel" Grid.Row="3" TextColor="Gray" />
+
+        <CollectionView x:Name="ScanList" Grid.Row="4">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="10" Margin="0,0,0,6" StrokeThickness="1" Stroke="LightGray">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Title}" FontAttributes="Bold" />
+                            <Label Text="{Binding Detail}" TextColor="Gray" FontSize="12" />
+                            <Label Text="⚠ Másik körzet eszköze" TextColor="#EF6C00"
+                                   FontSize="12" IsVisible="{Binding IsOtherZone}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

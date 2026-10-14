@@ -18,6 +18,9 @@
             Title="Beolvasás"
             ContentTemplate="{DataTemplate local:ScanPage}"
             Route="ScanPage" />
+        <ShellContent Title="Beolvasások"
+              ContentTemplate="{DataTemplate local:ScansPage}"
+              Route="ScansPage" />
         <ShellContent
             x:Name="AssetsTab"
             Title="Eszközök"
@@ -33,5 +36,8 @@
             Title="Fiók"
             ContentTemplate="{DataTemplate local:ProfilePage}"
             Route="ProfilePage" />
+        <ShellContent Title="Körzetek"
+              ContentTemplate="{DataTemplate local:ZonesPage}"
+              Route="ZonesPage" />
     </TabBar>
 </Shell>

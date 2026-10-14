@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InventoryApp.Client.ZonesPage"
+             Title="Körzetek">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="8">
+
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label x:Name="FormTitle" Text="Új körzet" FontAttributes="Bold" />
+            <Entry x:Name="CodeEntry" Placeholder="Kód (pl. 261)" />
+            <Entry x:Name="NameEntry" Placeholder="Név" />
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Mentés" Clicked="OnSave" />
+                <Button x:Name="CancelButton" Text="Mégse" IsVisible="False" Clicked="OnCancel" />
+            </HorizontalStackLayout>
+            <Label x:Name="MessageLabel" />
+        </VerticalStackLayout>
+
+        <Label x:Name="CountLabel" Grid.Row="1" TextColor="Gray" />
+
+        <CollectionView x:Name="ZoneList" Grid.Row="2">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="10" Margin="0,0,0,6" StrokeThickness="1" Stroke="LightGray">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <Label Text="{Binding FullName}" FontAttributes="Bold" />
+                                <Label Text="{Binding StatusText}" TextColor="Gray" FontSize="12" />
+                            </VerticalStackLayout>
+                            <Button Grid.Column="1" Text="Szerkeszt" Clicked="OnEdit" />
+                            <Button Grid.Column="2" Text="{Binding ToggleText}" Clicked="OnToggle" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
