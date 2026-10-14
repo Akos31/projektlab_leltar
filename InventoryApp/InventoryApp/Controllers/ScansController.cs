@@ -2,6 +2,7 @@
 using InventoryApp.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InventoryApp.Controllers
 {
@@ -16,6 +17,7 @@ namespace InventoryApp.Controllers
 
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ScansController : ControllerBase
     {
         private readonly AppDbContext _db;

@@ -2,6 +2,7 @@
 using InventoryApp.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InventoryApp.Controllers
 {
@@ -17,13 +18,13 @@ namespace InventoryApp.Controllers
 
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ZonesController : ControllerBase
     {
         private readonly AppDbContext _db;
         public ZonesController(AppDbContext db) => _db = db;
 
-        // Körzetek + az esetleg nyitott időszak azonosítója
-        [HttpGet]
+        // Körzetek + az esetleg nyitott időszak 
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] bool includeInactive = false)
         {
@@ -137,6 +138,7 @@ namespace InventoryApp.Controllers
         }
         // Új körzet
         [HttpPost]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> Create([FromBody] ZoneRequest req)
         {
             var code = req.Code?.Trim() ?? "";
@@ -154,6 +156,7 @@ namespace InventoryApp.Controllers
 
         // Szerkesztés
         [HttpPut("{id:int}")]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> Update(int id, [FromBody] ZoneRequest req)
         {
             var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);
@@ -175,6 +178,7 @@ namespace InventoryApp.Controllers
 
         // Inaktívvá tétel (csak nyitott időszak nélkül)
         [HttpPost("{id:int}/deactivate")]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> Deactivate(int id)
         {
             var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);
@@ -190,6 +194,7 @@ namespace InventoryApp.Controllers
         }
 
         [HttpPost("{id:int}/activate")]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> Activate(int id)
         {
             var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);

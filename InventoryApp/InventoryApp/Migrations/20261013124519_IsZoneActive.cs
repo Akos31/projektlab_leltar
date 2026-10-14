@@ -15,7 +15,7 @@ namespace InventoryApp.Migrations
                 table: "InventoryZones",
                 type: "INTEGER",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
         }
 
         /// <inheritdoc />

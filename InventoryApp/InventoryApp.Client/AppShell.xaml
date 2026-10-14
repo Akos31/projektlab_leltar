@@ -36,8 +36,11 @@
             Title="Fiók"
             ContentTemplate="{DataTemplate local:ProfilePage}"
             Route="ProfilePage" />
-        <ShellContent Title="Körzetek"
-              ContentTemplate="{DataTemplate local:ZonesPage}"
-              Route="ZonesPage" />
+        <ShellContent 
+            x:Name="ZonesTab"
+            Title="Körzetek"
+            ContentTemplate="{DataTemplate local:ZonesPage}"
+            Route="ZonesPage" />
+        
     </TabBar>
 </Shell>

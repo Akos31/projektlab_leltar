@@ -9,12 +9,11 @@ public partial class AppShell : Shell
         InitializeComponent();
     }
 
-    // Bejelentkezés után a szerepkör alapján elrejti a nem engedélyezett füleket.
-    // (Csak kényelmi funkció - a valódi védelem a szerveren van.)
     public void ApplyPermissions(UserSession session)
     {
         ScanTab.IsVisible = session.CanScan;
         ImportTab.IsVisible = session.CanImport;
+        ZonesTab.IsVisible = session.CanManageZones;
         // Később: ReportsTab.IsVisible = session.CanViewReports;
     }
 }

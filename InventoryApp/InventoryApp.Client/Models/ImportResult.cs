@@ -4,4 +4,5 @@ public class ImportResult
 {
     public int Imported { get; set; }
     public int SkippedExisting { get; set; }
+    public int SkippedInvalid { get; set; }
 }
