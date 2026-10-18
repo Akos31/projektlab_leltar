@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Bejelentkezés">
 
-    <VerticalStackLayout Padding="32" Spacing="20" VerticalOptions="Center">
+    <VerticalStackLayout Padding="32" Spacing="20" VerticalOptions="Center" MaximumWidthRequest="520" HorizontalOptions="Center">
 
         <Label Text="Leltár App" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
         <Label Text="Egyetemi eszköznyilvántartás" FontSize="13" HorizontalOptions="Center" TextColor="Gray" />

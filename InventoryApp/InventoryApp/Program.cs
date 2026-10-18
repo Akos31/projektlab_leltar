@@ -39,8 +39,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Default")
-                       ?? "Data Source=inventory.db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")
+                       ?? throw new InvalidOperationException("Hiányzik a connection string.")));
 
 builder.Services.AddScoped<ExcelImportService>();
 

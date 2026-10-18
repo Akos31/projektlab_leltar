@@ -189,7 +189,8 @@ namespace InventoryApp.Services
 
         private static DateTime? ParseDate(string text)
         {
-            if (DateTime.TryParse(text, SourceCulture, DateTimeStyles.None, out var d)) return d;
+            if (DateTime.TryParse(text, SourceCulture, DateTimeStyles.None, out var d))
+                return DateTime.SpecifyKind(d, DateTimeKind.Utc);
             return null;
         }
     }

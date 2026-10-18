@@ -6,7 +6,7 @@
     Title="Beolvasás">
 
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
+        <VerticalStackLayout Padding="16" Spacing="12" MaximumWidthRequest="960" HorizontalOptions="Center">
 
             <Label Text="Leltárkörzet" FontAttributes="Bold" />
             <Picker x:Name="ZonePicker" Title="Válassz körzetet"

@@ -67,7 +67,7 @@
         </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="16,12" RowSpacing="12">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16,12" RowSpacing="12" MaximumWidthRequest="960" HorizontalOptions="Center">
 
         <!-- Szűrőpanel -->
         <Border Grid.Row="0" Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="16">

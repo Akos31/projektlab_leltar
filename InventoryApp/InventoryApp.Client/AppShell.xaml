@@ -12,35 +12,18 @@
         ContentTemplate="{DataTemplate local:LoginPage}"
         Route="LoginPage" />
 
-    <TabBar Route="main">
-        <ShellContent
-            x:Name="ScanTab"
-            Title="Beolvasás"
-            ContentTemplate="{DataTemplate local:ScanPage}"
-            Route="ScanPage" />
+    <TabBar Route="main" Shell.NavBarIsVisible="False">
+        <ShellContent x:Name="ScanTab" Title="Beolvasás"
+        ContentTemplate="{DataTemplate local:ScanPage}" Route="ScanPage" />
         <ShellContent Title="Beolvasások"
-              ContentTemplate="{DataTemplate local:ScansPage}"
-              Route="ScansPage" />
-        <ShellContent
-            x:Name="AssetsTab"
-            Title="Eszközök"
-            ContentTemplate="{DataTemplate local:AssetsPage}"
-            Route="AssetsPage" />
-        <ShellContent
-            x:Name="ImportTab"
-            Title="Importálás"
-            ContentTemplate="{DataTemplate local:ImportPage}"
-            Route="ImportPage" />
-        <ShellContent
-            x:Name="ProfileTab"
-            Title="Fiók"
-            ContentTemplate="{DataTemplate local:ProfilePage}"
-            Route="ProfilePage" />
-        <ShellContent 
-            x:Name="ZonesTab"
-            Title="Körzetek"
-            ContentTemplate="{DataTemplate local:ZonesPage}"
-            Route="ZonesPage" />
-        
+        ContentTemplate="{DataTemplate local:ScansPage}" Route="ScansPage" />
+        <ShellContent x:Name="AssetsTab" Title="Eszközök"
+        ContentTemplate="{DataTemplate local:AssetsPage}" Route="AssetsPage" />
+        <ShellContent x:Name="ZonesTab" Title="Körzetek"
+        ContentTemplate="{DataTemplate local:ZonesPage}" Route="ZonesPage" />
+        <ShellContent x:Name="ImportTab" Title="Importálás"
+        ContentTemplate="{DataTemplate local:ImportPage}" Route="ImportPage" />
+        <ShellContent x:Name="ProfileTab" Title="Fiók"
+        ContentTemplate="{DataTemplate local:ProfilePage}" Route="ProfilePage" />
     </TabBar>
 </Shell>

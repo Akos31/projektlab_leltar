@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="InventoryApp.Client.ScansPage"
              Title="Beolvasások">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16" RowSpacing="8" MaximumWidthRequest="700" HorizontalOptions="Center">
 
         <Picker x:Name="ZoneFilter" Grid.Row="0" Title="Körzet"
                 ItemDisplayBinding="{Binding Display}"
@@ -23,13 +23,16 @@
         <Label x:Name="CountLabel" Grid.Row="3" TextColor="Gray" />
 
         <CollectionView x:Name="ScanList" Grid.Row="4">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="16" />
+            </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Border Padding="10" Margin="0,0,0,6" StrokeThickness="1" Stroke="LightGray">
+                    <Border Padding="10" StrokeThickness="1" Stroke="LightGray">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
-                        <VerticalStackLayout Spacing="2">
+                        <VerticalStackLayout Spacing="4">
                             <Label Text="{Binding Title}" FontAttributes="Bold" />
                             <Label Text="{Binding Detail}" TextColor="Gray" FontSize="12" />
                             <Label Text="⚠ Másik körzet eszköze" TextColor="#EF6C00"
