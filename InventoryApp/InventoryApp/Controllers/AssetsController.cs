@@ -178,7 +178,8 @@ namespace InventoryApp.Controllers
                 return Ok(new
                 {
                     result.Imported,
-                    result.SkippedExisting
+                    result.SkippedExisting,
+                    result.SkippedInvalid
                 });
             }
             finally

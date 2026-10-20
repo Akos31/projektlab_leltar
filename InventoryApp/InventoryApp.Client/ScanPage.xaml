@@ -32,8 +32,15 @@
             <BoxView HeightRequest="1" Color="LightGray" />
 
             <Label Text="Kód beolvasása" FontAttributes="Bold" />
-            <Entry x:Name="CodeEntry" Placeholder="Leltárszám / vonalkód"
-               IsEnabled="False" Completed="OnScan" />
+            <Entry x:Name="CodeEntry" Placeholder="Leltárszám / vonalkód" IsEnabled="False" Completed="OnScan" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Label Text="Darabszám:" VerticalOptions="Center" />
+                <Stepper x:Name="QuantityStepper" Minimum="1" Maximum="999" Increment="1" Value="1"
+             IsEnabled="False" ValueChanged="OnQuantityChanged" />
+                <Label x:Name="QuantityLabel" Text="1" VerticalOptions="Center" WidthRequest="30" />
+            </HorizontalStackLayout>
+
             <Button x:Name="ScanButton" Text="Beolvasás" IsEnabled="False" Clicked="OnScan" />
 
             <Border x:Name="ResultCard" IsVisible="False" Padding="12" StrokeThickness="0">

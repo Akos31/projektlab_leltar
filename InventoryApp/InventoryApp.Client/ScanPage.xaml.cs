@@ -69,6 +69,7 @@ namespace InventoryApp.Client
 
             bool ready = zone?.OpenPeriodId != null && Room != null;
             CodeEntry.IsEnabled = ready;
+            QuantityStepper.IsEnabled = ready;
             ScanButton.IsEnabled = ready;
         }
 
@@ -130,14 +131,19 @@ namespace InventoryApp.Client
             var code = CodeEntry.Text?.Trim();
             if (string.IsNullOrEmpty(code) || Zone == null || Room == null) return;
 
+            var quantity = (int)QuantityStepper.Value;
+
             try
             {
-                var r = await _api.ScanAsync(code, Zone.Id, Room.Id);
+                var r = await _api.ScanAsync(code, Zone.Id, Room.Id, quantity);
                 switch (r.Result)
                 {
                     case "Ok":
                         _sessionScans++;
-                        ShowResult($"✔ {r.Asset?.Name} – beolvasva ({r.ScannedTotal}/{r.ExpectedQuantity})", "#2E7D32");
+                        if (r.ScannedTotal > r.ExpectedQuantity)
+                            ShowResult($"⚠ {r.Asset?.Name} – TÖBBLET ({r.ScannedTotal}/{r.ExpectedQuantity})", "#EF6C00");
+                        else
+                            ShowResult($"✔ {r.Asset?.Name} – beolvasva ({r.ScannedTotal}/{r.ExpectedQuantity})", "#2E7D32");
                         break;
                     case "OtherZone":
                         _sessionScans++;
@@ -155,7 +161,13 @@ namespace InventoryApp.Client
             }
 
             CodeEntry.Text = "";
+            QuantityStepper.Value = 1;
             CodeEntry.Focus();
+        }
+
+        private void OnQuantityChanged(object? sender, ValueChangedEventArgs e)
+        {
+            QuantityLabel.Text = ((int)e.NewValue).ToString();
         }
 
         private void ShowResult(string text, string colorHex)

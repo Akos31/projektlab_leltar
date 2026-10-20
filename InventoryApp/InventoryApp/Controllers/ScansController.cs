@@ -3,15 +3,15 @@ using InventoryApp.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace InventoryApp.Controllers
 {
     public class ScanRequest
     {
         public string Code { get; set; } = string.Empty;
-        public int InventoryZoneId { get; set; }   // aktív körzet
-        public int RoomId { get; set; }            // kiválasztott helyiség
-        public int? UserId { get; set; }           // később a bejelentkezésből jön
+        public int InventoryZoneId { get; set; }
+        public int RoomId { get; set; }
         public int Quantity { get; set; } = 1;
     }
 
@@ -32,18 +32,19 @@ namespace InventoryApp.Controllers
             if (req.Quantity < 1)
                 return BadRequest(new { result = "InvalidInput", message = "A darabszám legalább 1." });
 
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int? userId = int.TryParse(userIdClaim, out var uid) ? uid : null;
+
             var period = await _db.InventoryPeriods
                 .FirstOrDefaultAsync(p => p.InventoryZoneId == req.InventoryZoneId && p.Status == "open");
             if (period == null)
                 return BadRequest(new { result = "NoOpenPeriod", message = "A körzetben nincs nyitott leltári időszak." });
 
-            // a helyiségnek az aktív körzethez kell tartoznia
             var roomOk = await _db.Rooms.AnyAsync(r =>
                 r.Id == req.RoomId && r.InventoryZoneId == req.InventoryZoneId);
             if (!roomOk)
                 return BadRequest(new { result = "InvalidRoom", message = "Érvénytelen helyiség ebben a körzetben." });
 
-            // azonosítás bármely kódtípus alapján
             var asset = await _db.Assets
                 .Where(a => a.Codes.Any(c => c.CodeValue == code))
                 .FirstOrDefaultAsync();
@@ -56,13 +57,14 @@ namespace InventoryApp.Controllers
                 InventoryPeriodId = period.Id,
                 InventoryZoneId = req.InventoryZoneId,
                 RoomId = req.RoomId,
-                UserId = req.UserId,
+                UserId = userId,
                 Timestamp = DateTime.UtcNow,
                 ScannedQuantity = req.Quantity,
                 IsOtherZone = asset.InventoryZoneId != req.InventoryZoneId
             };
             _db.Scans.Add(scan);
             await _db.SaveChangesAsync();
+
 
             var scannedTotal = await _db.Scans
                 .Where(s => s.AssetId == asset.Id && s.InventoryPeriodId == period.Id)
