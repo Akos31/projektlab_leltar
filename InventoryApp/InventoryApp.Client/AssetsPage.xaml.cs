@@ -8,6 +8,7 @@ public partial class AssetsPage : ContentPage
 {
     private const int PageSize = 100;
     private const double MinCardWidth = 380; // ennél keskenyebb kártya nem lesz -> oszlopszám
+    private int? _manualColumnCount;
 
     private static readonly FilterOption AllOption = new(null, "Összes");
 
@@ -29,6 +30,8 @@ public partial class AssetsPage : ContentPage
         InitializeComponent();
         _api = api;
         AssetsList.ItemsSource = _assets;
+        ColumnCountPicker.ItemsSource = new[] { "Automatikus", "2", "3", "4" };
+        ColumnCountPicker.SelectedIndex = 0;
     }
 
     protected override async void OnAppearing()
@@ -247,12 +250,27 @@ public partial class AssetsPage : ContentPage
     private async void OnRefreshClicked(object sender, EventArgs e) => await RefreshAllAsync();
 
     // Széles ablakban több oszlopba rendezzük a kártyákat.
+    private void OnColumnCountChanged(object sender, EventArgs e)
+    {
+        var selected = ColumnCountPicker.SelectedItem as string;
+        _manualColumnCount = selected is not null && selected != "Automatikus" && int.TryParse(selected, out var n)
+            ? n
+            : null;
+        OnListSizeChanged(null, EventArgs.Empty);
+    }
     private void OnListSizeChanged(object? sender, EventArgs e)
     {
-        if (AssetsList.ItemsLayout is not GridItemsLayout grid || AssetsList.Width <= 0)
+        if (AssetsList.ItemsLayout is not GridItemsLayout grid)
             return;
 
-        var span = Math.Max(1, (int)(AssetsList.Width / MinCardWidth));
+        int span;
+        if (_manualColumnCount is int manual)
+            span = manual;
+        else if (AssetsList.Width > 0)
+            span = Math.Max(1, (int)(AssetsList.Width / MinCardWidth));
+        else
+            return;
+
         if (grid.Span != span)
             grid.Span = span;
     }

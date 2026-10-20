@@ -11,12 +11,39 @@ public class AssetSummary
     public string? Type { get; set; }
     public string? Zone { get; set; }
     public int AccessoryCount { get; set; }
+    public int? OpenPeriodId { get; set; }
+    public int ScannedTotal { get; set; }
+    public bool HasWrongZoneScan { get; set; }
 
     // --- Megjelenítéshez számolt mezők (a szerver nem küldi) ---
 
     public string DisplayType => ToDisplayType(Type);
 
     public string StatusText => ToStatusText(Status);
+
+    public string ScanState => OpenPeriodId is null
+    ? "imported"
+    : ScannedTotal <= 0
+        ? "none"
+        : ScannedTotal < ExpectedQuantity
+            ? "partial"
+            : ScannedTotal == ExpectedQuantity
+                ? "exact"
+                : "surplus";
+
+    public string ScanStatusText => ScanState switch
+    {
+        "imported" => "Beimportálva",
+        "none" => "Nem beolvasott",
+        "partial" => $"Részben beolvasott ({ScannedTotal}/{ExpectedQuantity})",
+        "exact" => $"Pontosan megvan ({ScannedTotal}/{ExpectedQuantity})",
+        "surplus" => $"Túl van olvasva ({ScannedTotal}/{ExpectedQuantity})",
+        _ => ScanState
+    };
+
+    public bool ShowZoneCorrectness => ScannedTotal > 0;
+
+    public string ZoneCorrectnessText => HasWrongZoneScan ? "⚠ Rossz körzetben" : "✓ Jó körzetben";
 
     public string ZoneText => string.IsNullOrWhiteSpace(Zone) ? "Nincs zóna" : $"Zóna {Zone}";
 

@@ -65,6 +65,68 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="ScanStatusPill" TargetType="Border" x:DataType="models:AssetSummary">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E5E7EB, Dark=#3F3F46}" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="Padding" Value="8,3" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding ScanState}" Value="partial">
+                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FEF3C7, Dark=#78350F}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Border" Binding="{Binding ScanState}" Value="exact">
+                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#DCFCE7, Dark=#14532D}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Border" Binding="{Binding ScanState}" Value="surplus">
+                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FFEDD5, Dark=#7C2D12}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Border" Binding="{Binding ScanState}" Value="none">
+                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FEE2E2, Dark=#7F1D1D}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ScanStatusPillText" TargetType="Label" x:DataType="models:AssetSummary">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding ScanState}" Value="exact">
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light=#166534, Dark=#BBF7D0}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Label" Binding="{Binding ScanState}" Value="none">
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light=#991B1B, Dark=#FECACA}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Label" Binding="{Binding ScanState}" Value="surplus">
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light=#9A3412, Dark=#FED7AA}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Label" Binding="{Binding ScanState}" Value="partial">
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light=#92400E, Dark=#FDE68A}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ZoneCorrectnessChip" TargetType="Border" x:DataType="models:AssetSummary">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#DCFCE7, Dark=#14532D}" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="Padding" Value="8,3" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding HasWrongZoneScan}" Value="True">
+                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FEE2E2, Dark=#7F1D1D}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ZoneCorrectnessChipText" TargetType="Label" x:DataType="models:AssetSummary">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#166534, Dark=#BBF7D0}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding HasWrongZoneScan}" Value="True">
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light=#991B1B, Dark=#FECACA}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16,12" RowSpacing="12" MaximumWidthRequest="960" HorizontalOptions="Center">
@@ -96,21 +158,23 @@
         </Border>
 
         <!-- Találatok száma + szűrők törlése -->
-        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Padding="4,0">
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" Padding="4,0">
             <ActivityIndicator x:Name="LoadingIndicator"
-                               WidthRequest="18" HeightRequest="18"
-                               IsVisible="False" VerticalOptions="Center" />
+                       WidthRequest="18" HeightRequest="18"
+                       IsVisible="False" VerticalOptions="Center" />
             <Label Grid.Column="1" x:Name="ResultLabel" Style="{StaticResource Muted}"
-                   FontSize="14" VerticalOptions="Center" />
-            <Button Grid.Column="2" x:Name="ResetButton"
-                    Text="✕  Szűrők törlése"
-                    IsVisible="False"
-                    Clicked="OnResetClicked"
-                    BackgroundColor="Transparent"
-                    BorderWidth="0"
-                    FontSize="13"
-                    Padding="8,4"
-                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+           FontSize="14" VerticalOptions="Center" />
+            <Picker Grid.Column="2" x:Name="ColumnCountPicker" WidthRequest="120"
+            SelectedIndexChanged="OnColumnCountChanged" />
+            <Button Grid.Column="3" x:Name="ResetButton"
+            Text="✕  Szűrők törlése"
+            IsVisible="False"
+            Clicked="OnResetClicked"
+            BackgroundColor="Transparent"
+            BorderWidth="0"
+            FontSize="13"
+            Padding="8,4"
+            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
         </Grid>
 
         <!-- Eszközlista -->
@@ -155,9 +219,8 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:AssetSummary">
                         <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="14,12">
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto"
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto"
                                   ColumnSpacing="12" RowSpacing="6">
-
                                 <!-- Név -->
                                 <Label Grid.Row="0" Grid.Column="0"
                                        Text="{Binding Name}"
@@ -189,6 +252,17 @@
                                     <Border Style="{StaticResource Chip}" StrokeShape="RoundRectangle 6"
                                             IsVisible="{Binding HasAccessories}">
                                         <Label Text="{Binding AccessoryText}" Style="{StaticResource ChipText}" />
+                                    </Border>
+                                </HorizontalStackLayout>
+
+                                <!-- Leltározási állapot -->
+                                <HorizontalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="6">
+                                    <Border Style="{StaticResource ScanStatusPill}" StrokeShape="RoundRectangle 6">
+                                        <Label Text="{Binding ScanStatusText}" Style="{StaticResource ScanStatusPillText}" />
+                                    </Border>
+                                    <Border Style="{StaticResource ZoneCorrectnessChip}" StrokeShape="RoundRectangle 6"
+                                        IsVisible="{Binding ShowZoneCorrectness}">
+                                        <Label Text="{Binding ZoneCorrectnessText}" Style="{StaticResource ZoneCorrectnessChipText}" />
                                     </Border>
                                 </HorizontalStackLayout>
 

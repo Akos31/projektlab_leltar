@@ -75,6 +75,14 @@ namespace InventoryApp.Controllers
                         .Where(c => c.IsPrimary)
                         .Select(c => c.CodeValue)
                         .FirstOrDefault(),
+                                        OpenPeriodId = a.InventoryZone!.InventoryPeriods
+                        .Where(p => p.Status == "open")
+                        .Select(p => (int?)p.Id)
+                        .FirstOrDefault(),
+                                        ScannedTotal = a.Scans
+                        .Where(s => s.InventoryPeriod.Status == "open")
+                        .Sum(s => (int?)s.ScannedQuantity) ?? 0,
+                    HasWrongZoneScan = a.Scans.Any(s => s.InventoryPeriod.Status == "open" && s.IsOtherZone),
                     AccessoryCount = a.Accessories.Count
                 })
                 .ToListAsync();
