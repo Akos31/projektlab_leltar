@@ -30,6 +30,7 @@ public static class MauiProgram
         builder.Services.AddTransient<ImportPage>();
         builder.Services.AddTransient<ZonesPage>();
         builder.Services.AddTransient<UsersPage>();
+        builder.Services.AddTransient<ComparePage>();
         builder.Services.AddTransient<ProfilePage>();
 
 #if DEBUG

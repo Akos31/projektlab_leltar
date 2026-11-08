@@ -19,6 +19,8 @@
         ContentTemplate="{DataTemplate local:ScansPage}" Route="ScansPage" />
         <ShellContent x:Name="AssetsTab" Title="Eszközök"
         ContentTemplate="{DataTemplate local:AssetsPage}" Route="AssetsPage" />
+        <ShellContent x:Name="CompareTab" Title="Összehasonlítás"
+        ContentTemplate="{DataTemplate local:ComparePage}" Route="ComparePage" />
         <ShellContent x:Name="ZonesTab" Title="Körzetek"
         ContentTemplate="{DataTemplate local:ZonesPage}" Route="ZonesPage" />
         <ShellContent x:Name="UsersTab" Title="Felhasználók"

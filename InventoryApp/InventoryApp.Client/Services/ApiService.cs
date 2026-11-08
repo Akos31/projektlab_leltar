@@ -284,4 +284,19 @@ public class ApiService
         var url = "api/scans" + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
         return await _http.GetFromJsonAsync<List<ScanItem>>(url) ?? new();
     }
+
+    // --- Kiértékelés: lezárt leltárak összehasonlítása ---
+
+    // GET api/reports/closed-periods
+    public async Task<List<ClosedPeriodItem>> GetClosedPeriodsAsync()
+        => await _http.GetFromJsonAsync<List<ClosedPeriodItem>>("api/reports/closed-periods") ?? new();
+
+    // GET api/reports/compare?periodA=..&periodB=..
+    public async Task<(CompareResult? Result, string? Error)> ComparePeriodsAsync(int periodA, int periodB)
+    {
+        using var resp = await _http.GetAsync($"api/reports/compare?periodA={periodA}&periodB={periodB}");
+        if (!resp.IsSuccessStatusCode)
+            return (null, await ReadErrorAsync(resp) ?? $"Szerverhiba ({(int)resp.StatusCode})");
+        return (await resp.Content.ReadFromJsonAsync<CompareResult>(), null);
+    }
 }

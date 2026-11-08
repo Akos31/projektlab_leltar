@@ -15,6 +15,6 @@ public partial class AppShell : Shell
         ImportTab.IsVisible = session.CanImport;
         ZonesTab.IsVisible = session.CanManageZones;
         UsersTab.IsVisible = session.CanManageUsers;
-        // Később: ReportsTab.IsVisible = session.CanViewReports;
+        CompareTab.IsVisible = session.CanViewReports;
     }
 }
