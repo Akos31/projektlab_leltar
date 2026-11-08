@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InventoryApp.Client.AssetTypesPage"
+             Title="Eszköztípusok">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="8" MaximumWidthRequest="700" HorizontalOptions="Center">
+
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label Text="Új eszköztípus" FontAttributes="Bold" />
+            <Entry x:Name="NameEntry" Placeholder="Pl. Mérőműszer" />
+            <Button Text="Mentés" Clicked="OnSave" />
+            <Label x:Name="MessageLabel" />
+        </VerticalStackLayout>
+
+        <Label x:Name="CountLabel" Grid.Row="1" TextColor="Gray" />
+
+        <CollectionView x:Name="TypeList" Grid.Row="2">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="10" Margin="0,0,0,6" StrokeThickness="1" Stroke="LightGray">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Label Text="{Binding Display}" />
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

@@ -14,6 +14,7 @@ public class AssetSummary
     public int? OpenPeriodId { get; set; }
     public int ScannedTotal { get; set; }
     public bool HasWrongZoneScan { get; set; }
+    public string? ResponsiblePersonName { get; set; }
 
     // --- Megjelenítéshez számolt mezők (a szerver nem küldi) ---
 
@@ -50,6 +51,10 @@ public class AssetSummary
     public bool HasAccessories => AccessoryCount > 0;
 
     public string AccessoryText => $"{AccessoryCount} tartozék";
+
+    public bool HasResponsiblePerson => !string.IsNullOrWhiteSpace(ResponsiblePersonName);
+    
+    public string ResponsibleText => $"Felelős: {ResponsiblePersonName}";
 
     // --- Segédfüggvények (a szűrőkhöz is kellenek) ---
 

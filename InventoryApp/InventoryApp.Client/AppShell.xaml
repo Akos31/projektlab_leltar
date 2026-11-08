@@ -21,6 +21,8 @@
         ContentTemplate="{DataTemplate local:AssetsPage}" Route="AssetsPage" />
         <ShellContent x:Name="ZonesTab" Title="Körzetek"
         ContentTemplate="{DataTemplate local:ZonesPage}" Route="ZonesPage" />
+        <ShellContent x:Name="AssetTypesTab" Title="Eszköztípusok"
+        ContentTemplate="{DataTemplate local:AssetTypesPage}" Route="AssetTypesPage" />
         <ShellContent x:Name="UsersTab" Title="Felhasználók"
         ContentTemplate="{DataTemplate local:UsersPage}" Route="UsersPage" />
         <ShellContent x:Name="ImportTab" Title="Importálás"

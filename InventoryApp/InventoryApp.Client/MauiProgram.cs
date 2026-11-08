@@ -29,6 +29,7 @@ public static class MauiProgram
         builder.Services.AddTransient<AssetsPage>();
         builder.Services.AddTransient<ImportPage>();
         builder.Services.AddTransient<ZonesPage>();
+        builder.Services.AddTransient<AssetTypesPage>();
         builder.Services.AddTransient<UsersPage>();
         builder.Services.AddTransient<ProfilePage>();
 

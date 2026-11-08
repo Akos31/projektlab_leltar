@@ -291,7 +291,10 @@ public partial class AssetsPage : ContentPage
         if (e.Parameter is not AssetSummary asset)
             return;
 
-        var page = new AssetStatusPage(_api, _session, asset.Id, asset.Name, asset.Status);
+        var page = new AssetStatusPage(_api, _session, asset.Id, asset.Name, asset.Status, asset.ResponsiblePersonName);
         await Navigation.PushModalAsync(page);
+
+        await LoadPageAsync(reset: true);
+
     }
 }

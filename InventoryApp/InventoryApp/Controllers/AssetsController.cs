@@ -1,4 +1,4 @@
-using InventoryApp.Data;
+ï»¿using InventoryApp.Data;
 using InventoryApp.Entities;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +23,7 @@ namespace InventoryApp.Controllers
         }
 
         // GET /api/assets?skip=0&take=100&search=...&status=...&type=...&zone=...
-        // Lapozott, szûrt lista
+        // Lapozott, szÃ»rt lista
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] int skip = 0,
@@ -40,7 +40,7 @@ namespace InventoryApp.Controllers
 
             IQueryable<Asset> query = _db.Assets.AsNoTracking();
 
-            // Keresés: név, eszközazonosító vagy bármelyik kód (pl. leltárszám)
+            // KeresÃ©s: nÃ©v, eszkÃ¶zazonosÃ­tÃ³ vagy bÃ¡rmelyik kÃ³d (pl. leltÃ¡rszÃ¡m)
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var pattern = $"%{search.Trim()}%";
@@ -68,7 +68,7 @@ namespace InventoryApp.Controllers
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderBy(a => a.Id)          // stabil sorrend kell a lapozáshoz
+                .OrderBy(a => a.Id)          // stabil sorrend kell a lapozÃ¡shoz
                 .Skip(skip)
                 .Take(take)
                 .Select(a => new
@@ -92,7 +92,8 @@ namespace InventoryApp.Controllers
                         .Where(s => s.InventoryPeriod.Status == "open")
                         .Sum(s => (int?)s.ScannedQuantity) ?? 0,
                     HasWrongZoneScan = a.Scans.Any(s => s.InventoryPeriod.Status == "open" && s.IsOtherZone),
-                    AccessoryCount = a.Accessories.Count
+                    AccessoryCount = a.Accessories.Count,
+                    ResponsiblePersonName = a.ResponsiblePerson != null ? a.ResponsiblePerson.Name : null
                 })
                 .ToListAsync();
 
@@ -100,7 +101,7 @@ namespace InventoryApp.Controllers
         }
 
         // GET /api/assets/filters
-        // A legördülõ szûrõk lehetséges értékei
+        // A legÃ¶rdÃ¼lÃµ szÃ»rÃµk lehetsÃ©ges Ã©rtÃ©kei
         [HttpGet("filters")]
         public async Task<IActionResult> GetFilters()
         {
@@ -167,7 +168,7 @@ namespace InventoryApp.Controllers
         {
             var newStatus = req.NewStatus?.Trim().ToLowerInvariant() ?? "";
             if (!ValidStatuses.Contains(newStatus))
-                return BadRequest(new { message = $"Érvénytelen állapot: '{req.NewStatus}'." });
+                return BadRequest(new { message = $"Ã‰rvÃ©nytelen Ã¡llapot: '{req.NewStatus}'." });
 
             var asset = await _db.Assets.FirstOrDefaultAsync(a => a.Id == id);
             if (asset is null)
@@ -217,15 +218,42 @@ namespace InventoryApp.Controllers
             return Ok(history);
         }
 
+
+        public class ResponsiblePersonUpdateRequest
+        {
+            public int? ResponsiblePersonId { get; set; }
+        }
+
+        // PUT /api/assets/5/responsible-person
+        // Felelos szemely hozzarendelese (vagy torlese, ha null) - csak admin
+        [HttpPut("{id:int}/responsible-person")]
+        [Authorize(Roles = Roles.Admin)]
+        public async Task<IActionResult> UpdateResponsiblePerson(int id, [FromBody] ResponsiblePersonUpdateRequest req)
+        {
+            var asset = await _db.Assets.FirstOrDefaultAsync(a => a.Id == id);
+            if (asset is null)
+                return NotFound();
+
+            if (req.ResponsiblePersonId is not null &&
+                !await _db.ResponsiblePersons.AnyAsync(p => p.Id == req.ResponsiblePersonId))
+                return BadRequest(new { message = "Nincs ilyen felelÅ‘s szemÃ©ly." });
+
+            asset.ResponsiblePersonId = req.ResponsiblePersonId;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { asset.Id, asset.ResponsiblePersonId });
+        }
+
         // --- Segedmetodusok ---
 
         private IQueryable<Asset> LoadAssetQuery() =>
-            _db.Assets
-                .AsNoTracking()
-                .Include(a => a.AssetType)
-                .Include(a => a.InventoryZone)
-                .Include(a => a.Codes)
-                .Include(a => a.Accessories);
+        _db.Assets
+        .AsNoTracking()
+        .Include(a => a.AssetType)
+        .Include(a => a.InventoryZone)
+        .Include(a => a.ResponsiblePerson)
+        .Include(a => a.Codes)
+        .Include(a => a.Accessories);
 
         private static object ToDto(Asset asset) => new
         {
@@ -236,6 +264,7 @@ namespace InventoryApp.Controllers
             asset.Status,
             Type = asset.AssetType?.Name,
             Zone = asset.InventoryZone?.Code,
+            ResponsiblePersonName = asset.ResponsiblePerson?.Name,
             InventoryNumber = asset.Codes
                 .Where(c => c.IsPrimary)
                 .Select(c => c.CodeValue)
