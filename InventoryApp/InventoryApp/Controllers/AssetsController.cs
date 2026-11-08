@@ -4,6 +4,7 @@ using InventoryApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace InventoryApp.Controllers
 {
@@ -149,6 +150,71 @@ namespace InventoryApp.Controllers
                 return NotFound($"No asset found with inventory number '{inventoryNumber}'.");
 
             return Ok(ToDto(asset));
+        }
+
+        public class StatusUpdateRequest
+        {
+            public string NewStatus { get; set; } = string.Empty;
+        }
+
+        private static readonly string[] ValidStatuses = { "active", "decommissioned", "lost", "stolen", "other" };
+
+        // PUT /api/assets/5/status
+        // Allapotvaltas - csak admin, minden valtas elozmenykent is elmentve
+        [HttpPut("{id:int}/status")]
+        [Authorize(Roles = Roles.Admin)]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateRequest req)
+        {
+            var newStatus = req.NewStatus?.Trim().ToLowerInvariant() ?? "";
+            if (!ValidStatuses.Contains(newStatus))
+                return BadRequest(new { message = $"Érvénytelen állapot: '{req.NewStatus}'." });
+
+            var asset = await _db.Assets.FirstOrDefaultAsync(a => a.Id == id);
+            if (asset is null)
+                return NotFound();
+
+            if (asset.Status == newStatus)
+                return Ok(new { asset.Id, asset.Status, asset.StatusChangedAt });
+
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int? userId = int.TryParse(userIdClaim, out var uid) ? uid : null;
+
+            _db.AssetStatusHistories.Add(new AssetStatusHistory
+            {
+                AssetId = asset.Id,
+                OldStatus = asset.Status,
+                NewStatus = newStatus,
+                ChangedAt = DateTime.UtcNow,
+                ChangedByUserId = userId
+            });
+
+            asset.Status = newStatus;
+            asset.StatusChangedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { asset.Id, asset.Status, asset.StatusChangedAt });
+        }
+
+        // GET /api/assets/5/status-history
+        [HttpGet("{id:int}/status-history")]
+        public async Task<IActionResult> GetStatusHistory(int id)
+        {
+            var history = await _db.AssetStatusHistories
+                .Where(h => h.AssetId == id)
+                .OrderByDescending(h => h.ChangedAt)
+                .Select(h => new
+                {
+                    h.Id,
+                    h.OldStatus,
+                    h.NewStatus,
+                    h.ChangedAt,
+                    ChangedByName = h.ChangedByUser != null
+                        ? (string.IsNullOrWhiteSpace(h.ChangedByUser.DisplayName) ? h.ChangedByUser.Username : h.ChangedByUser.DisplayName)
+                        : null
+                })
+                .ToListAsync();
+
+            return Ok(history);
         }
 
         // --- Segedmetodusok ---

@@ -228,6 +228,9 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:AssetSummary">
                         <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="14,12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnAssetTapped" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto"
                                   ColumnSpacing="12" RowSpacing="6">
                                 <!-- Név -->

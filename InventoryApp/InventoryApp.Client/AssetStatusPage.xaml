@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="InventoryApp.Client.AssetStatusPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:InventoryApp.Client.Models"
+    Title="Eszköz állapota"
+    BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#181818}">
+
+    <ContentPage.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark=#262626}" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light=#E5E7EB, Dark=#333333}" />
+            <Setter Property="StrokeThickness" Value="1" />
+        </Style>
+        <Style x:Key="Muted" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,12" Spacing="16" MaximumWidthRequest="720">
+
+            <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="AssetNameLabel" FontSize="18" FontFamily="OpenSansSemibold" />
+                    <Label x:Name="CurrentStatusLabel" Style="{StaticResource Muted}" />
+
+                    <VerticalStackLayout x:Name="EditPanel" Spacing="6">
+                        <Label Text="ÚJ ÁLLAPOT" FontSize="12" FontFamily="OpenSansSemibold" />
+                        <Picker x:Name="StatusPicker" />
+                        <Button x:Name="SaveButton" Text="Mentés" Clicked="OnSaveClicked" HeightRequest="44" />
+                    </VerticalStackLayout>
+
+                    <Label x:Name="ErrorLabel" TextColor="#B91C1C" IsVisible="False" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Előzmények" FontSize="16" FontFamily="OpenSansSemibold" />
+
+            <CollectionView x:Name="HistoryList">
+                <CollectionView.EmptyView>
+                    <Label Text="Még nincs állapotváltás rögzítve." Style="{StaticResource Muted}" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:AssetStatusHistoryEntry">
+                        <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 10" Padding="12" Margin="0,0,0,8">
+                            <VerticalStackLayout Spacing="2">
+                                <Label FontFamily="OpenSansSemibold" Text="{Binding ChangeText}" />
+                                <Label Style="{StaticResource Muted}" Text="{Binding ChangedAtText}" />
+                                <Label Style="{StaticResource Muted}" Text="{Binding ChangedByText, StringFormat='Módosította: {0}'}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="Bezárás" Clicked="OnCloseClicked"
+                    BackgroundColor="Transparent" BorderWidth="1" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
