@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InventoryApp.Client.UsersPage"
+             Title="Felhasználók">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="8" MaximumWidthRequest="760" HorizontalOptions="Center">
+
+        <!-- Új felhasználó / szerkesztés -->
+        <Border Grid.Row="0" Padding="14" StrokeThickness="1" Stroke="LightGray">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            <VerticalStackLayout Spacing="8">
+                <Label x:Name="FormTitle" Text="Új felhasználó" FontAttributes="Bold" />
+                <Entry x:Name="UsernameEntry" Placeholder="Felhasználónév (pl. kovacs.anna)" />
+                <Entry x:Name="DisplayNameEntry" Placeholder="Megjelenített név (pl. Kovács Anna)" />
+                <Picker x:Name="RolePicker" Title="Szerepkör" />
+                <HorizontalStackLayout x:Name="ActiveRow" Spacing="8" IsVisible="False">
+                    <Switch x:Name="ActiveSwitch" VerticalOptions="Center" />
+                    <Label Text="Aktív (inaktív felhasználó nem tud belépni)" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <Label x:Name="CreateHintLabel" FontSize="12" TextColor="Gray"
+                       Text="Létrehozáskor a rendszer egyszer használatos ideiglenes jelszót generál, amit a felhasználónak első belépéskor meg kell változtatnia." />
+                <HorizontalStackLayout Spacing="8">
+                    <Button x:Name="SaveButton" Text="Létrehozás" Clicked="OnSave" />
+                    <Button x:Name="CancelButton" Text="Mégse" IsVisible="False" Clicked="OnCancel" />
+                </HorizontalStackLayout>
+                <Label x:Name="MessageLabel" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Label x:Name="CountLabel" TextColor="Gray" VerticalOptions="Center" />
+            <HorizontalStackLayout Grid.Column="1" Spacing="6">
+                <Label Text="Inaktívak is" VerticalOptions="Center" />
+                <Switch x:Name="ShowInactiveSwitch" Toggled="OnShowInactiveToggled" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <RefreshView x:Name="RefreshContainer" Grid.Row="2" Refreshing="OnRefreshing">
+            <CollectionView x:Name="UserList">
+                <!-- A sablon gyökerén lévő Margin-t Windowson figyelmen kívül hagyja, ezért ItemSpacing -->
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.EmptyView>
+                    <Label Text="Nincs megjeleníthető felhasználó." TextColor="Gray" HorizontalOptions="Center" Margin="0,20" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="10" StrokeThickness="1" Stroke="LightGray">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <VerticalStackLayout VerticalOptions="Center" Spacing="2">
+                                    <Label Text="{Binding DisplayName}" FontAttributes="Bold" />
+                                    <Label Text="{Binding Subtitle}" TextColor="Gray" FontSize="12" />
+                                    <Label Text="{Binding StatusText}" TextColor="{Binding StatusColor}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Text="Szerkeszt" Clicked="OnEdit" VerticalOptions="Center" />
+                                <Button Grid.Column="2" Text="Új jelszó" Clicked="OnResetPassword" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>
