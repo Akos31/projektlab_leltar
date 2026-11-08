@@ -17,6 +17,7 @@ namespace InventoryApp.Data
         public DbSet<Scan> Scans => Set<Scan>();
         public DbSet<ResponsiblePerson> ResponsiblePersons => Set<ResponsiblePerson>();
         public DbSet<User> Users => Set<User>();
+        public DbSet<AssetStatusHistory> AssetStatusHistories => Set<AssetStatusHistory>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -164,6 +164,23 @@ public class ApiService
         return result ?? new AssetFilterOptions();
     }
 
+
+    // PUT api/assets/{id}/status
+    public async Task<AssetStatusResult> UpdateAssetStatusAsync(int assetId, string newStatus)
+    {
+        using var response = await _http.PutAsJsonAsync($"api/assets/{assetId}/status", new { newStatus });
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<AssetStatusResult>()
+               ?? throw new InvalidOperationException("Üres válasz érkezett a szervertől.");
+    }
+
+    // GET api/assets/{id}/status-history
+    public async Task<List<AssetStatusHistoryEntry>> GetAssetStatusHistoryAsync(int assetId)
+    {
+        var result = await _http.GetFromJsonAsync<List<AssetStatusHistoryEntry>>($"api/assets/{assetId}/status-history");
+        return result ?? new List<AssetStatusHistoryEntry>();
+    }
+
     // POST api/assets/import  (multipart: "file" + "zoneName")
     public async Task<ImportResult> ImportExcelAsync(Stream fileStream, string fileName, string zoneName)
     {

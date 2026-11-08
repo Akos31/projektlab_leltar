@@ -13,6 +13,7 @@ public partial class AssetsPage : ContentPage
     private static readonly FilterOption AllOption = new(null, "Összes");
 
     private readonly ApiService _api;
+    private readonly UserSession _session;
     private readonly ObservableCollection<AssetSummary> _assets = new();
 
     private int _totalCount;          // a szűrésnek megfelelő összes eszköz a szerveren
@@ -25,10 +26,11 @@ public partial class AssetsPage : ContentPage
 
     private bool HasMore => _assets.Count < _totalCount;
 
-    public AssetsPage(ApiService api)
+    public AssetsPage(ApiService api, UserSession session)
     {
         InitializeComponent();
         _api = api;
+        _session = session;
         AssetsList.ItemsSource = _assets;
         ColumnCountPicker.ItemsSource = new[] { "Automatikus", "2", "3", "4" };
         ColumnCountPicker.SelectedIndex = 0;
@@ -283,5 +285,13 @@ public partial class AssetsPage : ContentPage
 
         if (grid.Span != span)
             grid.Span = span;
+    }
+    private async void OnAssetTapped(object sender, TappedEventArgs e)
+    {
+        if (e.Parameter is not AssetSummary asset)
+            return;
+
+        var page = new AssetStatusPage(_api, _session, asset.Id, asset.Name, asset.Status);
+        await Navigation.PushModalAsync(page);
     }
 }
