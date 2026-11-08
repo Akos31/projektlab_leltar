@@ -25,7 +25,7 @@ public partial class ProfilePage : ContentPage
         var permissions = new List<string> { "• Eszközök megtekintése" };
         if (_session.CanScan) permissions.Add("• Leltározás (beolvasás)");
         if (_session.CanImport) permissions.Add("• Excel import");
-        if (_session.CanViewReports) permissions.Add("• Jelentések és export");
+        if (_session.CanViewReports) permissions.Add("• Lezárt leltárak összehasonlítása");
         if (_session.CanManageUsers) permissions.Add("• Felhasználók kezelése");
 
         PermissionsLabel.Text = "Jogosultságok:\n" + string.Join("\n", permissions);

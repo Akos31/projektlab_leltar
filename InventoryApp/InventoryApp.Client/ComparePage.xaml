@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InventoryApp.Client.ComparePage"
+             Title="Összehasonlítás">
+
+    <ContentPage.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stroke" Value="LightGray" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        </Style>
+        <Style x:Key="Caption" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="Gray" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="10"
+          MaximumWidthRequest="1000" HorizontalOptions="Fill">
+
+        <!-- Választás -->
+        <Border Grid.Row="0" Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Lezárt leltárak összehasonlítása" FontAttributes="Bold" />
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Picker x:Name="ZonePicker" Title="Körzet" SelectedIndexChanged="OnZoneChanged" />
+                    <Picker x:Name="PeriodAPicker" Grid.Column="1" Title="Korábbi leltár" />
+                    <Picker x:Name="PeriodBPicker" Grid.Column="2" Title="Későbbi leltár" />
+                </Grid>
+                <HorizontalStackLayout Spacing="10">
+                    <Button x:Name="CompareButton" Text="Összehasonlítás" Clicked="OnCompare" />
+                    <ActivityIndicator x:Name="Busy" IsRunning="False" IsVisible="False" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <Label x:Name="MessageLabel" TextColor="Gray" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- A két időszak összesítője -->
+        <Grid x:Name="PeriodsRow" Grid.Row="1" ColumnDefinitions="*,Auto,*" ColumnSpacing="8" IsVisible="False">
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="KORÁBBI" Style="{StaticResource Caption}" />
+                    <Label x:Name="PeriodARange" FontAttributes="Bold" />
+                    <Label x:Name="PeriodADetail" FontSize="12" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Border>
+            <Label Grid.Column="1" Text="→" FontSize="22" VerticalOptions="Center" />
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="KÉSŐBBI" Style="{StaticResource Caption}" />
+                    <Label x:Name="PeriodBRange" FontAttributes="Bold" />
+                    <Label x:Name="PeriodBDetail" FontSize="12" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- Összesítő csempék (egyben szűrők) + keresés -->
+        <VerticalStackLayout x:Name="FilterArea" Grid.Row="2" Spacing="6" IsVisible="False">
+            <FlexLayout x:Name="TilesLayout" Wrap="Wrap" JustifyContent="Start">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="12,6" Margin="0,0,8,8" Stroke="{Binding Accent}"
+                                StrokeThickness="{Binding BorderWidth}" Opacity="{Binding Opacity}"
+                                StrokeShape="RoundRectangle 8">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnTileTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout>
+                                <Label Text="{Binding Count}" FontSize="18" FontAttributes="Bold"
+                                       TextColor="{Binding Accent}" />
+                                <Label Text="{Binding Label}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry x:Name="SearchEntry" Placeholder="Keresés: név, leltárszám, helyiség..."
+                       TextChanged="OnSearchChanged" />
+                <Label x:Name="CountLabel" Grid.Column="1" TextColor="Gray" VerticalOptions="Center" />
+            </Grid>
+        </VerticalStackLayout>
+
+        <!-- Eszközönkénti eredmény -->
+        <CollectionView x:Name="ResultList" Grid.Row="3">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.EmptyView>
+                <Label x:Name="EmptyLabel" Text="Válassz körzetet és két lezárt leltárt."
+                       TextColor="Gray" HorizontalOptions="Center" Margin="0,20" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="10" StrokeThickness="1" Stroke="LightGray" StrokeShape="RoundRectangle 8">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding Title}" FontAttributes="Bold" />
+                                <Label Text="{Binding Meta}" FontSize="12" TextColor="Gray" />
+                                <Label Text="{Binding AText}" FontSize="13" />
+                                <Label Text="{Binding BText}" FontSize="13" />
+                            </VerticalStackLayout>
+                            <Border Grid.Column="1" BackgroundColor="{Binding ChangeColor}" StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 10" Padding="10,3" VerticalOptions="Start">
+                                <Label Text="{Binding ChangeText}" TextColor="White" FontSize="12"
+                                       FontAttributes="Bold" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

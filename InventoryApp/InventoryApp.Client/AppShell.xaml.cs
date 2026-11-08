@@ -16,6 +16,6 @@ public partial class AppShell : Shell
         ZonesTab.IsVisible = session.CanManageZones;
         AssetTypesTab.IsVisible = session.CanManageAssetTypes;
         UsersTab.IsVisible = session.CanManageUsers;
-        // Később: ReportsTab.IsVisible = session.CanViewReports;
+        CompareTab.IsVisible = session.CanViewReports;
     }
 }
