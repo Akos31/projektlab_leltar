@@ -293,5 +293,8 @@ public partial class AssetsPage : ContentPage
 
         var page = new AssetStatusPage(_api, _session, asset.Id, asset.Name, asset.Status);
         await Navigation.PushModalAsync(page);
+
+        await LoadPageAsync(reset: true);
+
     }
 }

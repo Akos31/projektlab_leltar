@@ -144,6 +144,40 @@ namespace InventoryApp.Migrations
                     b.ToTable("AssetCodes");
                 });
 
+            modelBuilder.Entity("InventoryApp.Entities.AssetStatusHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AssetId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ChangedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OldStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetId");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.ToTable("AssetStatusHistories");
+                });
+
             modelBuilder.Entity("InventoryApp.Entities.AssetType", b =>
                 {
                     b.Property<int>("Id")
@@ -399,6 +433,23 @@ namespace InventoryApp.Migrations
                         .IsRequired();
 
                     b.Navigation("Asset");
+                });
+
+            modelBuilder.Entity("InventoryApp.Entities.AssetStatusHistory", b =>
+                {
+                    b.HasOne("InventoryApp.Entities.Asset", "Asset")
+                        .WithMany()
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InventoryApp.Entities.User", "ChangedByUser")
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId");
+
+                    b.Navigation("Asset");
+
+                    b.Navigation("ChangedByUser");
                 });
 
             modelBuilder.Entity("InventoryApp.Entities.InventoryPeriod", b =>

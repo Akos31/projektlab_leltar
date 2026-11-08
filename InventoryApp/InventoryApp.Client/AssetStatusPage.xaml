@@ -57,7 +57,10 @@
             </CollectionView>
 
             <Button Text="Bezárás" Clicked="OnCloseClicked"
-                    BackgroundColor="Transparent" BorderWidth="1" />
+                    BackgroundColor="Transparent"
+                    BorderWidth="1"
+                    BorderColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
 
         </VerticalStackLayout>
     </ScrollView>
