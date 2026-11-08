@@ -30,7 +30,9 @@ namespace InventoryApp.Controllers
             [FromQuery] string? search = null,
             [FromQuery] string? status = null,
             [FromQuery] string? type = null,
-            [FromQuery] string? zone = null)
+            [FromQuery] string? zone = null,
+            [FromQuery] int? roomId = null,
+            [FromQuery] int? responsiblePersonId = null)
         {
             skip = Math.Max(0, skip);
             take = Math.Clamp(take, 1, 200);
@@ -55,6 +57,12 @@ namespace InventoryApp.Controllers
 
             if (!string.IsNullOrWhiteSpace(zone))
                 query = query.Where(a => a.InventoryZone!.Code == zone);
+
+            if (roomId is not null)
+                query = query.Where(a => a.Scans.Any(s => s.RoomId == roomId));
+
+            if (responsiblePersonId is not null)
+                query = query.Where(a => a.ResponsiblePersonId == responsiblePersonId);
 
             var totalCount = await query.CountAsync();
 
@@ -104,7 +112,18 @@ namespace InventoryApp.Controllers
             var zones = await _db.Assets
                 .Select(a => a.InventoryZone!.Code).Distinct().OrderBy(c => c).ToListAsync();
 
-            return Ok(new { Statuses = statuses, Types = types, Zones = zones });
+            var rooms = await _db.Rooms
+                .Include(r => r.InventoryZone)
+                .OrderBy(r => r.InventoryZone!.Code).ThenBy(r => r.RoomNumber)
+                .Select(r => new { r.Id, Label = r.InventoryZone!.Code + " / " + r.RoomNumber })
+                .ToListAsync();
+
+            var responsiblePersons = await _db.ResponsiblePersons
+                .OrderBy(p => p.Name)
+                .Select(p => new { p.Id, Label = p.Name })
+                .ToListAsync();
+
+            return Ok(new { Statuses = statuses, Types = types, Zones = zones, Rooms = rooms, ResponsiblePersons = responsiblePersons });
         }
         // GET /api/assets/5
         // ID alapu kereses

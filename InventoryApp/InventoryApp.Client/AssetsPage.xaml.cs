@@ -53,6 +53,8 @@ public partial class AssetsPage : ContentPage
             FillPicker(StatusPicker, filters.Statuses.Select(s => new FilterOption(s, AssetSummary.ToStatusText(s))));
             FillPicker(TypePicker, filters.Types.Select(t => new FilterOption(t, AssetSummary.ToDisplayType(t))));
             FillPicker(ZonePicker, filters.Zones.Select(z => new FilterOption(z, z)));
+            FillPicker(RoomPicker, filters.Rooms.Select(r => new FilterOption(r.Id.ToString(), r.Label)));
+            FillPicker(ResponsiblePersonPicker, filters.ResponsiblePersons.Select(p => new FilterOption(p.Id.ToString(), p.Label)));
             _loaded = true;
         }
         catch (Exception ex)
@@ -174,16 +176,22 @@ public partial class AssetsPage : ContentPage
         Search = SearchEntry.Text?.Trim(),
         Status = SelectedValue(StatusPicker),
         Type = SelectedValue(TypePicker),
-        Zone = SelectedValue(ZonePicker)
+        Zone = SelectedValue(ZonePicker),
+        RoomId = SelectedIntValue(RoomPicker),
+        ResponsiblePersonId = SelectedIntValue(ResponsiblePersonPicker)
     };
 
     private static string? SelectedValue(Picker picker) =>
         (picker.SelectedItem as FilterOption)?.Value;
 
+    private static int? SelectedIntValue(Picker picker) =>
+        int.TryParse((picker.SelectedItem as FilterOption)?.Value, out var id) ? id : null;
+
     private bool HasActiveFilter()
     {
         var q = BuildQuery();
-        return !string.IsNullOrWhiteSpace(q.Search) || q.Status is not null || q.Type is not null || q.Zone is not null;
+        return !string.IsNullOrWhiteSpace(q.Search) || q.Status is not null || q.Type is not null
+            || q.Zone is not null || q.RoomId is not null || q.ResponsiblePersonId is not null;
     }
 
     // --- Eseménykezelők ---
@@ -240,6 +248,8 @@ public partial class AssetsPage : ContentPage
         StatusPicker.SelectedItem = AllOption;
         TypePicker.SelectedItem = AllOption;
         ZonePicker.SelectedItem = AllOption;
+        RoomPicker.SelectedItem = AllOption;
+        ResponsiblePersonPicker.SelectedItem = AllOption;
         _suppressFilter = false;
 
         await LoadPageAsync(reset: true);
