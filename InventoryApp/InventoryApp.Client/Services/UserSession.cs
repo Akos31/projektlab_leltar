@@ -21,6 +21,7 @@ public class UserSession
     public bool CanManageZones => Role is Admin;
     public bool CanManageUsers => Role is Admin;
     public bool CanManageAssetStatus => Role is Admin;
+    public bool CanManageAssetTypes => Role is Admin;
 
     public string RoleDisplayName => Role switch
     {

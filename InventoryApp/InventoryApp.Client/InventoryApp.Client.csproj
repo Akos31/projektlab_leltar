@@ -73,6 +73,7 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="ComparePage.xaml">
+	  <MauiXaml Update="AssetTypesPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="ImportPage.xaml">

@@ -37,6 +37,23 @@
                 </VerticalStackLayout>
             </Border>
 
+            <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 12" Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Felelős személy" FontSize="16" FontFamily="OpenSansSemibold" />
+                    <Label x:Name="ResponsibleLabel" Style="{StaticResource Muted}" />
+
+                    <VerticalStackLayout x:Name="ResponsibleEditPanel" Spacing="6">
+                        <Label Text="KIVÁLASZTÁS" FontSize="12" FontFamily="OpenSansSemibold" />
+                        <Picker x:Name="ResponsiblePicker" />
+
+                        <Label Text="VAGY ÚJ FELVÉTELE" FontSize="12" FontFamily="OpenSansSemibold" />
+                        <Entry x:Name="NewResponsibleEntry" Placeholder="Új felelős neve" />
+
+                        <Button x:Name="SaveResponsibleButton" Text="Mentés" Clicked="OnSaveResponsibleClicked" HeightRequest="44" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
             <Label Text="Előzmények" FontSize="16" FontFamily="OpenSansSemibold" />
 
             <CollectionView x:Name="HistoryList">

@@ -298,5 +298,32 @@ public class ApiService
         if (!resp.IsSuccessStatusCode)
             return (null, await ReadErrorAsync(resp) ?? $"Szerverhiba ({(int)resp.StatusCode})");
         return (await resp.Content.ReadFromJsonAsync<CompareResult>(), null);
+    // --- Felelős személyek 
+    public async Task<List<ResponsiblePersonItem>> GetResponsiblePersonsAsync()
+        => await _http.GetFromJsonAsync<List<ResponsiblePersonItem>>("api/responsiblepersons") ?? new();
+
+    public async Task<(ResponsiblePersonItem? Result, string? Error)> CreateResponsiblePersonAsync(string name)
+    {
+        using var resp = await _http.PostAsJsonAsync("api/responsiblepersons", new { name });
+        if (!resp.IsSuccessStatusCode)
+            return (null, await ReadErrorAsync(resp) ?? $"Szerverhiba ({(int)resp.StatusCode})");
+        return (await resp.Content.ReadFromJsonAsync<ResponsiblePersonItem>(), null);
+    }
+
+    public async Task<(bool Ok, string? Error)> AssignResponsiblePersonAsync(int assetId, int? responsiblePersonId)
+    {
+        using var resp = await _http.PutAsJsonAsync($"api/assets/{assetId}/responsible-person",
+            new { responsiblePersonId });
+        return await ReadResultAsync(resp);
+    }
+
+    // --- Eszköztípusok 
+    public async Task<List<AssetTypeItem>> GetAssetTypesAsync()
+        => await _http.GetFromJsonAsync<List<AssetTypeItem>>("api/assettypes") ?? new();
+
+    public async Task<(bool Ok, string? Error)> CreateAssetTypeAsync(string name)
+    {
+        using var resp = await _http.PostAsJsonAsync("api/assettypes", new { name });
+        return await ReadResultAsync(resp);
     }
 }

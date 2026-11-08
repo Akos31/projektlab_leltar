@@ -265,6 +265,10 @@
                                             IsVisible="{Binding HasAccessories}">
                                         <Label Text="{Binding AccessoryText}" Style="{StaticResource ChipText}" />
                                     </Border>
+                                    <Border Style="{StaticResource Chip}" StrokeShape="RoundRectangle 6"
+                                            IsVisible="{Binding HasResponsiblePerson}">
+                                        <Label Text="{Binding ResponsibleText}" Style="{StaticResource ChipText}" />
+                                    </Border>
                                 </HorizontalStackLayout>
 
                                 <!-- Leltározási állapot -->
