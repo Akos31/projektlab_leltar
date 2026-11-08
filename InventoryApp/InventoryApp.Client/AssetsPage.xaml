@@ -139,18 +139,27 @@
                            Placeholder="Keresés név vagy leltárszám alapján"
                            TextChanged="OnSearchTextChanged" />
 
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*,*" ColumnSpacing="12" RowSpacing="12">
+                    <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
                         <Label Text="ÁLLAPOT" Style="{StaticResource Caption}" />
                         <Picker x:Name="StatusPicker" SelectedIndexChanged="OnFilterChanged" />
                     </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
                         <Label Text="TÍPUS" Style="{StaticResource Caption}" />
                         <Picker x:Name="TypePicker" SelectedIndexChanged="OnFilterChanged" />
                     </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="2" Spacing="4">
+                    <VerticalStackLayout Grid.Row="0" Grid.Column="2" Spacing="4">
                         <Label Text="ZÓNA" Style="{StaticResource Caption}" />
                         <Picker x:Name="ZonePicker" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="1" Grid.Column="0" Spacing="4">
+                        <Label Text="HELYISÉG" Style="{StaticResource Caption}" />
+                        <Picker x:Name="RoomPicker" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                        <Label Text="FELELŐS" Style="{StaticResource Caption}" />
+                        <Picker x:Name="ResponsiblePersonPicker" SelectedIndexChanged="OnFilterChanged" />
                     </VerticalStackLayout>
                 </Grid>
 

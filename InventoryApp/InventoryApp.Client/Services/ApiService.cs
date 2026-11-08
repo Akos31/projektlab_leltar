@@ -53,6 +53,14 @@ public class ApiService
             if (!string.IsNullOrWhiteSpace(value))
                 parameters.Add($"{name}={Uri.EscapeDataString(value)}");
         }
+        void AddInt(string name, int? value)
+        {
+            if (value is not null)
+                parameters.Add($"{name}={value}");
+        }
+
+        AddInt("roomId", filter.RoomId);
+        AddInt("responsiblePersonId", filter.ResponsiblePersonId);
 
         Add("search", filter.Search);
         Add("status", filter.Status);
