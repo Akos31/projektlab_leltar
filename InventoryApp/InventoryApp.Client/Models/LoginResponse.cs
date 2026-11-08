@@ -7,4 +7,8 @@ public class LoginResponse
     public string Username { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
+
+    // Igaz, ha ideiglenes jelszóval lépett be: ilyenkor nincs token,
+    // előbb új jelszót kell beállítani.
+    public bool MustChangePassword { get; set; }
 }

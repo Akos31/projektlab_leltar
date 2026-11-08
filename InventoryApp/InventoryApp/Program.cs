@@ -75,6 +75,32 @@ builder.Services
             {
                 Console.WriteLine("JWT HIBA: " + ctx.Exception);
                 return Task.CompletedTask;
+            },
+
+            // Minden kérésnél ellenőrizzük, hogy a token még érvényes-e a felhasználó
+            // jelenlegi állapotához képest: inaktiválás, szerepkör-változás vagy
+            // jelszó-visszaállítás után a régi token azonnal használhatatlan.
+            OnTokenValidated = async ctx =>
+            {
+                var idClaim = ctx.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var stampClaim = ctx.Principal?.FindFirstValue(TokenService.SecurityStampClaim);
+                if (!int.TryParse(idClaim, out var userId) || stampClaim is null)
+                {
+                    ctx.Fail("Hiányos token.");
+                    return;
+                }
+
+                var db = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var user = await db.Users.AsNoTracking()
+                    .Where(u => u.Id == userId)
+                    .Select(u => new { u.IsActive, u.MustChangePassword, u.SecurityStamp })
+                    .FirstOrDefaultAsync();
+
+                if (user is null || !user.IsActive || user.MustChangePassword ||
+                    user.SecurityStamp != stampClaim)
+                {
+                    ctx.Fail("A token már nem érvényes.");
+                }
             }
         };
     });

@@ -6,6 +6,7 @@
     Title="Fiók"
     BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#181818}">
 
+    <ScrollView>
     <VerticalStackLayout Padding="16,12" Spacing="12" MaximumWidthRequest="720">
 
         <Border StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="1"
@@ -37,5 +38,23 @@
             </VerticalStackLayout>
         </Border>
 
+        <Border StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="1"
+                BackgroundColor="{AppThemeBinding Light=White, Dark=#262626}"
+                Stroke="{AppThemeBinding Light=#E5E7EB, Dark=#333333}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Jelszó módosítása" FontSize="16" FontFamily="OpenSansSemibold"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F3F4F6}" />
+                <Entry x:Name="CurrentPasswordEntry" Placeholder="Jelenlegi jelszó" IsPassword="True" />
+                <Entry x:Name="NewPasswordEntry" Placeholder="Új jelszó" IsPassword="True" />
+                <Entry x:Name="ConfirmPasswordEntry" Placeholder="Új jelszó még egyszer" IsPassword="True"
+                       Completed="OnChangePasswordClicked" />
+                <Label Text="Legalább 8 karakter, betűvel és számmal." FontSize="12"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                <Button x:Name="ChangePasswordButton" Text="Jelszó módosítása" Clicked="OnChangePasswordClicked" />
+                <Label x:Name="PasswordMessageLabel" FontSize="13" IsVisible="False" />
+            </VerticalStackLayout>
+        </Border>
+
     </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

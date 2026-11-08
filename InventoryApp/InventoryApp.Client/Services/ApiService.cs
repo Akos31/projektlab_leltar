@@ -18,22 +18,107 @@ public class ApiService
     }
 
     // POST api/auth/login
+    // Ha a válaszban MustChangePassword igaz, NEM jelentkezteti be a felhasználót:
+    // előbb a ChangePasswordAsync-kal új jelszót kell beállítani.
     public async Task<LoginResponse> LoginAsync(string username, string password)
     {
         using var response = await _http.PostAsJsonAsync("api/auth/login", new { username, password });
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
-            throw new InvalidOperationException("Hibás felhasználónév vagy jelszó.");
+            throw new InvalidOperationException(
+                await ReadErrorAsync(response) ?? "Hibás felhasználónév vagy jelszó.");
 
         response.EnsureSuccessStatusCode();
 
         var login = await response.Content.ReadFromJsonAsync<LoginResponse>()
                     ?? throw new InvalidOperationException("Üres válasz érkezett a szervertől.");
 
-        _session.SignIn(login);
-        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.Token);
+        if (!login.MustChangePassword)
+            SignIn(login);
 
         return login;
+    }
+
+    // POST api/auth/change-password
+    // Ideiglenes és saját jelszó cseréjére is. Siker esetén a szerver új tokent ad
+    // (a régi érvénytelen lesz), ezzel be is jelentkeztetjük a felhasználót.
+    public async Task<(bool Ok, string? Error)> ChangePasswordAsync(
+        string username, string currentPassword, string newPassword)
+    {
+        using var response = await _http.PostAsJsonAsync("api/auth/change-password",
+            new { username, currentPassword, newPassword });
+
+        if (!response.IsSuccessStatusCode)
+            return (false, await ReadErrorAsync(response) ?? $"Szerverhiba ({(int)response.StatusCode})");
+
+        var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        if (login is null || string.IsNullOrEmpty(login.Token))
+            return (false, "Üres válasz érkezett a szervertől.");
+
+        SignIn(login);
+        return (true, null);
+    }
+
+    private void SignIn(LoginResponse login)
+    {
+        _session.SignIn(login);
+        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.Token);
+    }
+
+    // --- Felhasználókezelés (admin) ---
+
+    // GET api/users
+    public async Task<List<UserItem>> GetUsersAsync()
+        => await _http.GetFromJsonAsync<List<UserItem>>("api/users") ?? new();
+
+    // GET api/users/roles
+    public async Task<List<string>> GetRolesAsync()
+        => await _http.GetFromJsonAsync<List<string>>("api/users/roles") ?? new();
+
+    // POST api/users
+    public async Task<(TempPasswordResult? Result, string? Error)> CreateUserAsync(
+        string username, string displayName, string role)
+    {
+        using var resp = await _http.PostAsJsonAsync("api/users", new { username, displayName, role });
+        if (!resp.IsSuccessStatusCode)
+            return (null, await ReadErrorAsync(resp) ?? $"Szerverhiba ({(int)resp.StatusCode})");
+        return (await resp.Content.ReadFromJsonAsync<TempPasswordResult>(), null);
+    }
+
+    // PUT api/users/{id}
+    public async Task<(bool Ok, string? Error)> UpdateUserAsync(
+        int id, string username, string displayName, string role, bool isActive)
+    {
+        using var resp = await _http.PutAsJsonAsync($"api/users/{id}",
+            new { username, displayName, role, isActive });
+        return await ReadResultAsync(resp);
+    }
+
+    // POST api/users/{id}/reset-password
+    public async Task<(TempPasswordResult? Result, string? Error)> ResetPasswordAsync(int id)
+    {
+        using var resp = await _http.PostAsync($"api/users/{id}/reset-password", null);
+        if (!resp.IsSuccessStatusCode)
+            return (null, await ReadErrorAsync(resp) ?? $"Szerverhiba ({(int)resp.StatusCode})");
+        return (await resp.Content.ReadFromJsonAsync<TempPasswordResult>(), null);
+    }
+
+    // A szerver hibaüzenete: { "message": "..." } JSON vagy sima szöveg
+    private static async Task<string?> ReadErrorAsync(HttpResponseMessage resp)
+    {
+        if (resp.StatusCode == HttpStatusCode.Forbidden)
+            return "Nincs jogosultságod ehhez a művelethez.";
+
+        var text = await resp.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(text)) return null;
+        try
+        {
+            var err = JsonSerializer.Deserialize<ErrorResponse>(text,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            if (!string.IsNullOrWhiteSpace(err?.Message)) return err.Message;
+        }
+        catch (JsonException) { }
+        return text.Trim().Trim('"');
     }
 
     public void Logout()

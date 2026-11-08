@@ -17,6 +17,10 @@ namespace InventoryApp.Services
 
     public class TokenService
     {
+        // A token ezzel a claimmel hordozza a felhasználó SecurityStamp-jét;
+        // a Program.cs minden kérésnél összeveti az adatbázisban lévővel.
+        public const string SecurityStampClaim = "sstamp";
+
         private readonly JwtSettings _settings;
 
         public TokenService(IOptions<JwtSettings> options)
@@ -36,7 +40,8 @@ namespace InventoryApp.Services
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name, user.Username),
                     new Claim("displayName", user.DisplayName),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
+                    new Claim(ClaimTypes.Role, user.Role.ToString()),
+                    new Claim(SecurityStampClaim, user.SecurityStamp)
                 }),
                 Expires = expiresAt,
                 Issuer = _settings.Issuer,

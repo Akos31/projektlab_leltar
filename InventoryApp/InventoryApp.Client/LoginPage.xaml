@@ -9,11 +9,28 @@
 
         <Label Text="Leltár App" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
         <Label Text="Egyetemi eszköznyilvántartás" FontSize="13" HorizontalOptions="Center" TextColor="Gray" />
-        <Entry x:Name="UsernameEntry" Placeholder="Felhasználónév" />
-        <Entry x:Name="PasswordEntry" Placeholder="Jelszó" IsPassword="True"
-               Completed="OnLoginClicked" />
 
-        <Button x:Name="LoginButton" Text="Bejelentkezés" Clicked="OnLoginClicked" />
+        <!-- Normál bejelentkezés -->
+        <VerticalStackLayout x:Name="LoginPanel" Spacing="20">
+            <Entry x:Name="UsernameEntry" Placeholder="Felhasználónév" />
+            <Entry x:Name="PasswordEntry" Placeholder="Jelszó" IsPassword="True"
+                   Completed="OnLoginClicked" />
+
+            <Button x:Name="LoginButton" Text="Bejelentkezés" Clicked="OnLoginClicked" />
+        </VerticalStackLayout>
+
+        <!-- Ideiglenes jelszó után kötelező jelszócsere -->
+        <VerticalStackLayout x:Name="ChangePasswordPanel" Spacing="14" IsVisible="False">
+            <Label Text="Új jelszó beállítása" FontSize="18" FontAttributes="Bold" />
+            <Label x:Name="ChangeInfoLabel" FontSize="13" TextColor="Gray" />
+            <Entry x:Name="NewPasswordEntry" Placeholder="Új jelszó" IsPassword="True" />
+            <Entry x:Name="ConfirmPasswordEntry" Placeholder="Új jelszó még egyszer" IsPassword="True"
+                   Completed="OnSetPasswordClicked" />
+            <Label Text="Legalább 8 karakter, betűvel és számmal." FontSize="12" TextColor="Gray" />
+            <Button x:Name="SetPasswordButton" Text="Jelszó beállítása és belépés" Clicked="OnSetPasswordClicked" />
+            <Button Text="Mégse" Clicked="OnCancelChangeClicked" BackgroundColor="Transparent"
+                    TextColor="Gray" />
+        </VerticalStackLayout>
 
         <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" HorizontalOptions="Center" />
 

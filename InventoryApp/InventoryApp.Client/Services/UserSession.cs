@@ -19,6 +19,7 @@ public class UserSession
     public bool CanImport => Role is Admin;
     public bool CanViewReports => Role is Admin or Kiertekelo;
     public bool CanManageZones => Role is Admin;
+    public bool CanManageUsers => Role is Admin;
 
     public string RoleDisplayName => Role switch
     {
