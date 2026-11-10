@@ -298,6 +298,7 @@ public class ApiService
         if (!resp.IsSuccessStatusCode)
             return (null, await ReadErrorAsync(resp) ?? $"Szerverhiba ({(int)resp.StatusCode})");
         return (await resp.Content.ReadFromJsonAsync<CompareResult>(), null);
+    }
     // --- Felelős személyek 
     public async Task<List<ResponsiblePersonItem>> GetResponsiblePersonsAsync()
         => await _http.GetFromJsonAsync<List<ResponsiblePersonItem>>("api/responsiblepersons") ?? new();
