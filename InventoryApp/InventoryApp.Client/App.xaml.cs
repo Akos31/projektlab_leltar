@@ -4,7 +4,8 @@ namespace InventoryApp.Client
 {
     public partial class App : Application
     {
-        public App(UserSession session)
+        // a RealtimeService-t itt kérjük el, hogy már bejelentkezés előtt létrejöjjön
+        public App(UserSession session, RealtimeService realtime)
         {
             InitializeComponent();
             session.Expired += OnSessionExpired;

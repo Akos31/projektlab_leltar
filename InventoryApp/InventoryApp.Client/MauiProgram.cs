@@ -24,6 +24,7 @@ public static class MauiProgram
                     ? "https://10.0.2.2:7080/" : "https://localhost:7080/")
             });
         builder.Services.AddSingleton<ApiService>();
+        builder.Services.AddSingleton<RealtimeService>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<ScanPage>();
         builder.Services.AddTransient<ScansPage>();

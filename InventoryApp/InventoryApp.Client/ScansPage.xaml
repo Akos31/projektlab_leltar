@@ -20,7 +20,10 @@
             <Button Text="Frissítés" Clicked="OnRefresh" />
         </HorizontalStackLayout>
 
-        <Label x:Name="CountLabel" Grid.Row="3" TextColor="Gray" />
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
+            <Label x:Name="CountLabel" TextColor="Gray" />
+            <Label x:Name="LiveLabel" Grid.Column="1" FontSize="12" VerticalOptions="Center" />
+        </Grid>
 
         <CollectionView x:Name="ScanList" Grid.Row="4">
             <CollectionView.ItemsLayout>

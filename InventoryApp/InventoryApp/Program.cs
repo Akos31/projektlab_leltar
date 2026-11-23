@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using InventoryApp.Data;
+using InventoryApp.Hubs;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSignalR();
 
 // Swagger + "Authorize" gomb a token beillesztéséhez
 builder.Services.AddSwaggerGen(c =>
@@ -71,6 +73,15 @@ builder.Services
 
         options.Events = new JwtBearerEvents
         {
+            // SignalR: a WebSocket nem küld fejlécet, a token query paraméterben jön
+            OnMessageReceived = ctx =>
+            {
+                var token = ctx.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(token) && ctx.Request.Path.StartsWithSegments(InventoryHub.Path))
+                    ctx.Token = token;
+                return Task.CompletedTask;
+            },
+
             OnAuthenticationFailed = ctx =>
             {
                 Console.WriteLine("JWT HIBA: " + ctx.Exception);
@@ -128,5 +139,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();   // ÚJ - mindig a UseAuthorization ELŐTT
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<InventoryHub>(InventoryHub.Path);
 
 app.Run();

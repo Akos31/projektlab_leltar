@@ -12,10 +12,39 @@ namespace InventoryApp.Client
         private ZoneItem? Zone => ZonePicker.SelectedItem as ZoneItem;
         private RoomItem? Room => RoomPicker.SelectedItem as RoomItem;
 
-        public ScanPage(ApiService api)
+        public ScanPage(ApiService api, RealtimeService realtime)
         {
             InitializeComponent();
             _api = api;
+
+            realtime.ScanCreated += OnLiveScan;
+            realtime.PeriodChanged += OnLivePeriodChanged;
+        }
+
+        private void OnLiveScan(object? sender, ScanItem scan)
+        {
+            if (Zone == null || scan.ZoneId != Zone.Id) return;
+
+            LiveLabel.Text = $"Legutóbb a körzetben: {scan.Title} · {scan.Room} · " +
+                             $"{scan.ScannedQuantity} db · {scan.Timestamp.ToLocalTime():HH:mm:ss}";
+            LiveLabel.IsVisible = true;
+        }
+
+        private void OnLivePeriodChanged(object? sender, PeriodChangedMessage message)
+        {
+            if (ZonePicker.ItemsSource is not IEnumerable<ZoneItem> zones) return;
+
+            var zone = zones.FirstOrDefault(z => z.Id == message.ZoneId);
+            if (zone == null || zone.OpenPeriodId == message.OpenPeriodId) return;
+
+            zone.OpenPeriodId = message.OpenPeriodId;
+            if (zone != Zone) return;
+
+            UpdateState();
+            LiveLabel.Text = message.OpenPeriodId == null
+                ? $"A(z) {zone.Display} körzet időszakát lezárták, itt már nem lehet beolvasni."
+                : $"A(z) {zone.Display} körzetben elindult a #{message.OpenPeriodId} időszak.";
+            LiveLabel.IsVisible = true;
         }
 
         protected override async void OnAppearing()

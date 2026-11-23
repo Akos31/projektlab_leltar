@@ -51,8 +51,9 @@
             </Border>
 
             <Label x:Name="StatusLabel" TextColor="Gray" />
+
+            <Label x:Name="LiveLabel" TextColor="#1565C0" FontSize="13" IsVisible="False" />
         </VerticalStackLayout>
     </ScrollView>
 
 </ContentPage>
-    
