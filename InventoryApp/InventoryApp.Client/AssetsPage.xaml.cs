@@ -292,9 +292,15 @@ public partial class AssetsPage : ContentPage
             return;
 
         var page = new AssetStatusPage(_api, _session, asset.Id, asset.Name, asset.Status, asset.ResponsiblePersonName);
+
+        EventHandler? onClosed = null;
+        onClosed = async (_, _) =>
+        {
+            page.Disappearing -= onClosed;
+            await RefreshAllAsync();
+        };
+        page.Disappearing += onClosed;
+
         await Navigation.PushModalAsync(page);
-
-        await LoadPageAsync(reset: true);
-
     }
 }

@@ -46,11 +46,33 @@ namespace InventoryApp.Controllers
             if (!roomOk)
                 return BadRequest(new { result = "InvalidRoom", message = "Érvénytelen helyiség ebben a körzetben." });
 
-            var asset = await _db.Assets
+            var matches = await _db.Assets
                 .Where(a => a.Codes.Any(c => c.CodeValue == code))
-                .FirstOrDefaultAsync();
-            if (asset == null)
+                .Select(a => new
+                {
+                    Asset = a,
+                    IsPrimary = a.Codes.Any(c => c.CodeValue == code && c.IsPrimary)
+                })
+                .ToListAsync();
+
+            var candidates = matches.Any(m => m.IsPrimary)
+                ? matches.Where(m => m.IsPrimary).ToList()
+                : matches;
+
+            if (candidates.Count == 0)
                 return NotFound(new { result = "UnknownCode", message = $"Ismeretlen kód: {code}" });
+
+            if (candidates.Count > 1)
+            {
+                var names = string.Join(", ", candidates.Take(3).Select(m => m.Asset.Name));
+                return Conflict(new
+                {
+                    result = "AmbiguousCode",
+                    message = $"A(z) {code} kód több eszközhöz is tartozik ({names}). Olvasd be az eszköz leltárszámát."
+                });
+            }
+
+            var asset = candidates[0].Asset;
 
             var scan = new Scan
             {

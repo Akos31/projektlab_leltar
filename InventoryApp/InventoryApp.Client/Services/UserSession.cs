@@ -33,4 +33,13 @@ public class UserSession
 
     public void SignIn(LoginResponse login) => Current = login;
     public void SignOut() => Current = null;
+
+    public event EventHandler? Expired;
+
+    public void Expire()
+    {
+        if (Current is null) return;
+        Current = null;
+        Expired?.Invoke(this, EventArgs.Empty);
+    }
 }
