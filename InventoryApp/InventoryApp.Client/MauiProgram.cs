@@ -1,5 +1,6 @@
 ﻿using InventoryApp.Client.Services;
 using Microsoft.Extensions.Logging;
+using Plugin.Maui.Audio;
 
 namespace InventoryApp.Client;
 
@@ -25,6 +26,8 @@ public static class MauiProgram
             });
         builder.Services.AddSingleton<ApiService>();
         builder.Services.AddSingleton<RealtimeService>();
+        builder.Services.AddSingleton(AudioManager.Current);
+        builder.Services.AddSingleton<SoundService>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<ScanPage>();
         builder.Services.AddTransient<ScansPage>();
