@@ -24,6 +24,7 @@ namespace InventoryApp.Controllers
         public ScansController(AppDbContext db) => _db = db;
 
         [HttpPost]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Leltarozo)]
         public async Task<IActionResult> Create(ScanRequest req)
         {
             var code = req.Code?.Trim() ?? "";

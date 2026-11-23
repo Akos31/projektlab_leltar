@@ -48,6 +48,7 @@ namespace InventoryApp.Controllers
 
         // Nyitott időszak indítása (ha már van, azt adja vissza)
         [HttpPost("{id:int}/open-period")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Leltarozo)]
         public async Task<IActionResult> OpenPeriod(int id)
         {
             var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);
@@ -72,6 +73,7 @@ namespace InventoryApp.Controllers
         }
 
         [HttpPost("{id:int}/close-period")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Leltarozo)]
         public async Task<IActionResult> ClosePeriod(int id)
         {
             var open = await _db.InventoryPeriods
@@ -99,6 +101,7 @@ namespace InventoryApp.Controllers
 
         // Új helyiség felvétele (a helyiségeknek nincs forrásadata, itt jönnek létre)
         [HttpPost("{id:int}/rooms")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Leltarozo)]
         public async Task<IActionResult> AddRoom(int id, [FromBody] RoomRequest req)
         {
             var number = req.RoomNumber?.Trim() ?? "";
