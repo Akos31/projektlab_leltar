@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using InventoryApp.Client.Models;
 using InventoryApp.Client.Services;
 
@@ -6,17 +7,25 @@ namespace InventoryApp.Client
     public partial class ScansPage : ContentPage
     {
         private readonly ApiService _api;
+        private readonly RealtimeService _realtime;
+        private readonly ObservableCollection<ScanItem> _scans = new();
         private bool _loading;
 
-        public ScansPage(ApiService api)
+        public ScansPage(ApiService api, RealtimeService realtime)
         {
             InitializeComponent();
             _api = api;
+            _realtime = realtime;
+            ScanList.ItemsSource = _scans;
+
+            _realtime.ScanCreated += OnScanCreated;
+            _realtime.StatusChanged += (_, _) => UpdateLiveLabel();
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            UpdateLiveLabel();
             await LoadZonesAsync();
             await LoadPeriodsAsync();
             await RefreshAsync();
@@ -81,13 +90,44 @@ namespace InventoryApp.Client
                 bool? other = OtherOnly.IsToggled ? true : null;
 
                 var scans = await _api.GetScansAsync(zoneId, periodId, other);
-                ScanList.ItemsSource = scans;
-                CountLabel.Text = $"{scans.Count} beolvasás";
+                _scans.Clear();
+                foreach (var scan in scans)
+                    _scans.Add(scan);
+                UpdateCount();
             }
             catch (Exception ex)
             {
                 CountLabel.Text = $"A szerver nem érhető el: {ex.Message}";
             }
+        }
+
+        // élő értesítés, csak ha megfelel a szűrőknek
+        private void OnScanCreated(object? sender, ScanItem scan)
+        {
+            if (!MatchesFilters(scan) || _scans.Any(s => s.Id == scan.Id))
+                return;
+
+            _scans.Insert(0, scan);
+            UpdateCount();
+        }
+
+        private bool MatchesFilters(ScanItem scan)
+        {
+            if (ZoneFilter.SelectedItem is ZoneItem { Id: > 0 } zone && scan.ZoneId != zone.Id)
+                return false;
+            if (PeriodFilter.SelectedItem is PeriodListItem { Id: > 0 } period && scan.InventoryPeriodId != period.Id)
+                return false;
+            if (OtherOnly.IsToggled && !scan.IsOtherZone)
+                return false;
+            return true;
+        }
+
+        private void UpdateCount() => CountLabel.Text = $"{_scans.Count} beolvasás";
+
+        private void UpdateLiveLabel()
+        {
+            LiveLabel.Text = _realtime.IsConnected ? "● Élő frissítés" : "○ Nincs élő kapcsolat";
+            LiveLabel.TextColor = _realtime.IsConnected ? Color.FromArgb("#2E7D32") : Colors.Gray;
         }
 
         private async void OnZoneFilterChanged(object? sender, EventArgs e)

@@ -15,6 +15,7 @@ public class ApiService
     {
         _http = http;
         _session = session;
+        _session.Expired += (_, _) => _http.DefaultRequestHeaders.Authorization = null;
     }
 
     // POST api/auth/login

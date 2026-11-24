@@ -1,8 +1,12 @@
 ﻿using InventoryApp.Data;
+using InventoryApp.Dtos;
 using InventoryApp.Entities;
+using InventoryApp.Hubs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace InventoryApp.Controllers
@@ -21,9 +25,33 @@ namespace InventoryApp.Controllers
     public class ScansController : ControllerBase
     {
         private readonly AppDbContext _db;
-        public ScansController(AppDbContext db) => _db = db;
+        private readonly IHubContext<InventoryHub> _hub;
+
+        public ScansController(AppDbContext db, IHubContext<InventoryHub> hub)
+        {
+            _db = db;
+            _hub = hub;
+        }
+
+        // közös vetítés a listához és az élő értesítéshez
+        private static readonly Expression<Func<Scan, ScanListItemDto>> ToListItem = s =>
+            new ScanListItemDto(
+                s.Id,
+                s.Timestamp,
+                s.ScannedQuantity,
+                s.IsOtherZone,
+                s.UserId,
+                s.InventoryPeriodId,
+                s.AssetId,
+                s.Asset!.Name,
+                s.Asset.Codes.Where(c => c.IsPrimary).Select(c => c.CodeValue).FirstOrDefault(),
+                s.InventoryZoneId,
+                s.InventoryZone!.Code,
+                s.RoomId,
+                s.Room!.RoomNumber);
 
         [HttpPost]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Leltarozo)]
         public async Task<IActionResult> Create(ScanRequest req)
         {
             var code = req.Code?.Trim() ?? "";
@@ -45,11 +73,33 @@ namespace InventoryApp.Controllers
             if (!roomOk)
                 return BadRequest(new { result = "InvalidRoom", message = "Érvénytelen helyiség ebben a körzetben." });
 
-            var asset = await _db.Assets
+            var matches = await _db.Assets
                 .Where(a => a.Codes.Any(c => c.CodeValue == code))
-                .FirstOrDefaultAsync();
-            if (asset == null)
+                .Select(a => new
+                {
+                    Asset = a,
+                    IsPrimary = a.Codes.Any(c => c.CodeValue == code && c.IsPrimary)
+                })
+                .ToListAsync();
+
+            var candidates = matches.Any(m => m.IsPrimary)
+                ? matches.Where(m => m.IsPrimary).ToList()
+                : matches;
+
+            if (candidates.Count == 0)
                 return NotFound(new { result = "UnknownCode", message = $"Ismeretlen kód: {code}" });
+
+            if (candidates.Count > 1)
+            {
+                var names = string.Join(", ", candidates.Take(3).Select(m => m.Asset.Name));
+                return Conflict(new
+                {
+                    result = "AmbiguousCode",
+                    message = $"A(z) {code} kód több eszközhöz is tartozik ({names}). Olvasd be az eszköz leltárszámát."
+                });
+            }
+
+            var asset = candidates[0].Asset;
 
             var scan = new Scan
             {
@@ -69,6 +119,10 @@ namespace InventoryApp.Controllers
             var scannedTotal = await _db.Scans
                 .Where(s => s.AssetId == asset.Id && s.InventoryPeriodId == period.Id)
                 .SumAsync(s => s.ScannedQuantity);
+
+            // élő értesítés a klienseknek
+            var item = await _db.Scans.Where(s => s.Id == scan.Id).Select(ToListItem).FirstAsync();
+            await _hub.Clients.All.SendAsync(InventoryHub.ScanCreated, item);
 
             return Ok(new
             {
@@ -98,25 +152,7 @@ namespace InventoryApp.Controllers
 
             var list = await q
                 .OrderByDescending(s => s.Timestamp)
-                .Select(s => new
-                {
-                    s.Id,
-                    s.Timestamp,
-                    s.ScannedQuantity,
-                    s.IsOtherZone,
-                    s.UserId,
-                    s.InventoryPeriodId,
-                    AssetId = s.AssetId,
-                    AssetName = s.Asset!.Name,
-                    InventoryNumber = s.Asset.Codes
-                        .Where(c => c.IsPrimary)
-                        .Select(c => c.CodeValue)
-                        .FirstOrDefault(),
-                    ZoneId = s.InventoryZoneId,
-                    Zone = s.InventoryZone!.Code,
-                    RoomId = s.RoomId,
-                    Room = s.Room!.RoomNumber
-                })
+                .Select(ToListItem)
                 .ToListAsync();
 
             return Ok(list);

@@ -45,9 +45,9 @@ namespace InventoryApp.Controllers
             {
                 var pattern = $"%{search.Trim()}%";
                 query = query.Where(a =>
-                    EF.Functions.Like(a.Name, pattern) ||
-                    EF.Functions.Like(a.SourceId, pattern) ||
-                    a.Codes.Any(c => EF.Functions.Like(c.CodeValue, pattern)));
+                    EF.Functions.ILike(a.Name, pattern) ||
+                    EF.Functions.ILike(a.SourceId, pattern) ||
+                    a.Codes.Any(c => EF.Functions.ILike(c.CodeValue, pattern)));
             }
 
             if (!string.IsNullOrWhiteSpace(status))

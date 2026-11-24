@@ -1,6 +1,9 @@
 ﻿using InventoryApp.Data;
+using InventoryApp.Dtos;
 using InventoryApp.Entities;
+using InventoryApp.Hubs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 
@@ -22,7 +25,16 @@ namespace InventoryApp.Controllers
     public class ZonesController : ControllerBase
     {
         private readonly AppDbContext _db;
-        public ZonesController(AppDbContext db) => _db = db;
+        private readonly IHubContext<InventoryHub> _hub;
+
+        public ZonesController(AppDbContext db, IHubContext<InventoryHub> hub)
+        {
+            _db = db;
+            _hub = hub;
+        }
+
+        private Task NotifyPeriodChangedAsync(int zoneId, int? openPeriodId) =>
+            _hub.Clients.All.SendAsync(InventoryHub.PeriodChanged, new PeriodChangedDto(zoneId, openPeriodId));
 
         // Körzetek + az esetleg nyitott időszak 
         [HttpGet]
@@ -48,6 +60,7 @@ namespace InventoryApp.Controllers
 
         // Nyitott időszak indítása (ha már van, azt adja vissza)
         [HttpPost("{id:int}/open-period")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Leltarozo)]
         public async Task<IActionResult> OpenPeriod(int id)
         {
             var zone = await _db.InventoryZones.FirstOrDefaultAsync(z => z.Id == id);
@@ -68,10 +81,12 @@ namespace InventoryApp.Controllers
             };
             _db.InventoryPeriods.Add(period);
             await _db.SaveChangesAsync();
+            await NotifyPeriodChangedAsync(id, period.Id);
             return Ok(new { period.Id, period.StartDate, period.Status });
         }
 
         [HttpPost("{id:int}/close-period")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Leltarozo)]
         public async Task<IActionResult> ClosePeriod(int id)
         {
             var open = await _db.InventoryPeriods
@@ -82,6 +97,7 @@ namespace InventoryApp.Controllers
             open.Status = "closed";
             open.EndDate = DateTime.UtcNow;
             await _db.SaveChangesAsync();
+            await NotifyPeriodChangedAsync(id, null);
             return Ok(new { open.Id, open.Status, open.EndDate });
         }
 
@@ -99,6 +115,7 @@ namespace InventoryApp.Controllers
 
         // Új helyiség felvétele (a helyiségeknek nincs forrásadata, itt jönnek létre)
         [HttpPost("{id:int}/rooms")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Leltarozo)]
         public async Task<IActionResult> AddRoom(int id, [FromBody] RoomRequest req)
         {
             var number = req.RoomNumber?.Trim() ?? "";

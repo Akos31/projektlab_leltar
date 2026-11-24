@@ -1,5 +1,6 @@
 ﻿using InventoryApp.Client.Services;
 using Microsoft.Extensions.Logging;
+using Plugin.Maui.Audio;
 
 namespace InventoryApp.Client;
 
@@ -16,13 +17,17 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        builder.Services.AddSingleton(sp => new HttpClient
-        {
-            BaseAddress = new Uri(DeviceInfo.Platform == DevicePlatform.Android
-                ? "https://10.0.2.2:7080/" : "https://localhost:7080/")
-        });
-        builder.Services.AddSingleton<UserSession>();   
+        builder.Services.AddSingleton<UserSession>();
+        builder.Services.AddSingleton(sp =>
+            new HttpClient(new SessionExpiryHandler(sp.GetRequiredService<UserSession>()))
+            {
+                BaseAddress = new Uri(DeviceInfo.Platform == DevicePlatform.Android
+                    ? "https://10.0.2.2:7080/" : "https://localhost:7080/")
+            });
         builder.Services.AddSingleton<ApiService>();
+        builder.Services.AddSingleton<RealtimeService>();
+        builder.Services.AddSingleton(AudioManager.Current);
+        builder.Services.AddSingleton<SoundService>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<ScanPage>();
         builder.Services.AddTransient<ScansPage>();

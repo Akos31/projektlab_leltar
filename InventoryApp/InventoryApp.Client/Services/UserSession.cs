@@ -31,6 +31,27 @@ public class UserSession
         _ => Role
     };
 
-    public void SignIn(LoginResponse login) => Current = login;
-    public void SignOut() => Current = null;
+    public event EventHandler? SignedIn;
+    public event EventHandler? SignedOut;
+
+    public void SignIn(LoginResponse login)
+    {
+        Current = login;
+        SignedIn?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SignOut()
+    {
+        Current = null;
+        SignedOut?.Invoke(this, EventArgs.Empty);
+    }
+
+    public event EventHandler? Expired;
+
+    public void Expire()
+    {
+        if (Current is null) return;
+        Current = null;
+        Expired?.Invoke(this, EventArgs.Empty);
+    }
 }

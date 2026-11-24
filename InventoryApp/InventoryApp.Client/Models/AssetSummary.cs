@@ -1,7 +1,11 @@
-﻿namespace InventoryApp.Client.Models;
+﻿using System.ComponentModel;
 
-public class AssetSummary
+namespace InventoryApp.Client.Models;
+
+public class AssetSummary : INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     public int Id { get; set; }
     public string SourceId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -53,8 +57,23 @@ public class AssetSummary
     public string AccessoryText => $"{AccessoryCount} tartozék";
 
     public bool HasResponsiblePerson => !string.IsNullOrWhiteSpace(ResponsiblePersonName);
-    
+
     public string ResponsibleText => $"Felelős: {ResponsiblePersonName}";
+
+    // élő frissítés: új beolvasás hozzáadása a már betöltött kártyához
+    public void ApplyScan(int quantity, bool otherZone)
+    {
+        ScannedTotal += quantity;
+        if (otherZone)
+            HasWrongZoneScan = true;
+
+        foreach (var name in new[]
+                 {
+                     nameof(ScannedTotal), nameof(HasWrongZoneScan), nameof(ScanState),
+                     nameof(ScanStatusText), nameof(ShowZoneCorrectness), nameof(ZoneCorrectnessText)
+                 })
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
 
     // --- Segédfüggvények (a szűrőkhöz is kellenek) ---
 

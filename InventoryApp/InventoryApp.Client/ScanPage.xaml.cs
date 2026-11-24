@@ -6,16 +6,48 @@ namespace InventoryApp.Client
     public partial class ScanPage : ContentPage
     {
         private readonly ApiService _api;
+        private readonly SoundService _sound;
         private bool _loading;
         private int _sessionScans;
 
         private ZoneItem? Zone => ZonePicker.SelectedItem as ZoneItem;
         private RoomItem? Room => RoomPicker.SelectedItem as RoomItem;
 
-        public ScanPage(ApiService api)
+        public ScanPage(ApiService api, RealtimeService realtime, SoundService sound)
         {
             InitializeComponent();
             _api = api;
+            _sound = sound;
+            SoundSwitch.IsToggled = _sound.IsEnabled;
+
+            realtime.ScanCreated += OnLiveScan;
+            realtime.PeriodChanged += OnLivePeriodChanged;
+        }
+
+        private void OnLiveScan(object? sender, ScanItem scan)
+        {
+            if (Zone == null || scan.ZoneId != Zone.Id) return;
+
+            LiveLabel.Text = $"Legutóbb a körzetben: {scan.Title} · {scan.Room} · " +
+                             $"{scan.ScannedQuantity} db · {scan.Timestamp.ToLocalTime():HH:mm:ss}";
+            LiveLabel.IsVisible = true;
+        }
+
+        private void OnLivePeriodChanged(object? sender, PeriodChangedMessage message)
+        {
+            if (ZonePicker.ItemsSource is not IEnumerable<ZoneItem> zones) return;
+
+            var zone = zones.FirstOrDefault(z => z.Id == message.ZoneId);
+            if (zone == null || zone.OpenPeriodId == message.OpenPeriodId) return;
+
+            zone.OpenPeriodId = message.OpenPeriodId;
+            if (zone != Zone) return;
+
+            UpdateState();
+            LiveLabel.Text = message.OpenPeriodId == null
+                ? $"A(z) {zone.Display} körzet időszakát lezárták, itt már nem lehet beolvasni."
+                : $"A(z) {zone.Display} körzetben elindult a #{message.OpenPeriodId} időszak.";
+            LiveLabel.IsVisible = true;
         }
 
         protected override async void OnAppearing()
@@ -141,16 +173,24 @@ namespace InventoryApp.Client
                     case "Ok":
                         _sessionScans++;
                         if (r.ScannedTotal > r.ExpectedQuantity)
+                        {
                             ShowResult($"⚠ {r.Asset?.Name} – TÖBBLET ({r.ScannedTotal}/{r.ExpectedQuantity})", "#EF6C00");
+                            _sound.Play(ScanSound.Warning);
+                        }
                         else
+                        {
                             ShowResult($"✔ {r.Asset?.Name} – beolvasva ({r.ScannedTotal}/{r.ExpectedQuantity})", "#2E7D32");
+                            _sound.Play(ScanSound.Success);
+                        }
                         break;
                     case "OtherZone":
                         _sessionScans++;
                         ShowResult($"⚠ {r.Asset?.Name} másik körzet eszköze – elmentve, megjelölve", "#EF6C00");
+                        _sound.Play(ScanSound.Warning);
                         break;
                     default:
                         ShowResult($"✖ {r.Message}", "#C62828");
+                        _sound.Play(ScanSound.Error);
                         break;
                 }
                 StatusLabel.Text = $"Ebben a munkamenetben: {_sessionScans} sikeres beolvasás";
@@ -158,6 +198,7 @@ namespace InventoryApp.Client
             catch (Exception ex)
             {
                 ShowResult($"✖ A szerver nem érhető el: {ex.Message}", "#C62828");
+                _sound.Play(ScanSound.Error);
             }
 
             CodeEntry.Text = "";
@@ -168,6 +209,16 @@ namespace InventoryApp.Client
         private void OnQuantityChanged(object? sender, ValueChangedEventArgs e)
         {
             QuantityLabel.Text = ((int)e.NewValue).ToString();
+        }
+
+        private void OnSoundToggled(object? sender, ToggledEventArgs e)
+        {
+            if (e.Value == _sound.IsEnabled)
+                return;   // a mentett beállítás betöltése ne szólaljon meg
+
+            _sound.IsEnabled = e.Value;
+            if (e.Value)
+                _sound.Play(ScanSound.Success);
         }
 
         private void ShowResult(string text, string colorHex)

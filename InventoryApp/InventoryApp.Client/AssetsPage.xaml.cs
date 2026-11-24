@@ -26,12 +26,20 @@ public partial class AssetsPage : ContentPage
 
     private bool HasMore => _assets.Count < _totalCount;
 
-    public AssetsPage(ApiService api, UserSession session)
+    public AssetsPage(ApiService api, UserSession session, RealtimeService realtime)
     {
         InitializeComponent();
         _api = api;
         _session = session;
         AssetsList.ItemsSource = _assets;
+
+        // élő frissítés
+        realtime.ScanCreated += (_, scan) =>
+        {
+            foreach (var asset in _assets.Where(a => a.Id == scan.AssetId))
+                asset.ApplyScan(scan.ScannedQuantity, scan.IsOtherZone);
+        };
+
         ColumnCountPicker.ItemsSource = new[] { "Automatikus", "2", "3", "4" };
         ColumnCountPicker.SelectedIndex = 0;
     }
@@ -292,9 +300,15 @@ public partial class AssetsPage : ContentPage
             return;
 
         var page = new AssetStatusPage(_api, _session, asset.Id, asset.Name, asset.Status, asset.ResponsiblePersonName);
+
+        EventHandler? onClosed = null;
+        onClosed = async (_, _) =>
+        {
+            page.Disappearing -= onClosed;
+            await RefreshAllAsync();
+        };
+        page.Disappearing += onClosed;
+
         await Navigation.PushModalAsync(page);
-
-        await LoadPageAsync(reset: true);
-
     }
 }

@@ -32,6 +32,12 @@
         public int Id { get; set; }
     }
 
+    public class PeriodChangedMessage
+    {
+        public int ZoneId { get; set; }
+        public int? OpenPeriodId { get; set; }
+    }
+
     public class ScanAssetRef
     {
         public int Id { get; set; }
